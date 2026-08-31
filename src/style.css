@@ -1,0 +1,139 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: #fafaf9;
+  }
+
+  body {
+    min-width: 320px;
+    background: #fafaf9;
+  }
+
+  h1, h2, h3, h4, .font-display {
+    font-family: 'Playfair Display', Georgia, serif;
+  }
+
+  * {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-ink-900 text-white text-sm font-semibold rounded-xl hover:bg-brand-600 transition-all duration-200 shadow-sm hover:shadow-md;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-ink-900 text-sm font-semibold rounded-xl border-2 border-ink-900 hover:bg-ink-900 hover:text-white transition-all duration-200;
+  }
+
+  .btn-brand {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-500 text-white text-sm font-semibold rounded-xl hover:bg-brand-600 transition-all duration-200 shadow-sm hover:shadow-md;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 text-ink-600 text-sm font-medium rounded-lg hover:bg-ink-100 hover:text-ink-900 transition-all duration-150;
+  }
+
+  .section-label {
+    @apply inline-block text-xs font-semibold uppercase tracking-widest text-brand-600 mb-3;
+  }
+
+  .section-title {
+    @apply font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-ink-900 leading-tight;
+  }
+
+  .section-body {
+    @apply text-base text-ink-600 leading-relaxed;
+  }
+
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-surface-200 overflow-hidden transition-all duration-300 hover:shadow-card-hover;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-3 bg-white border border-surface-300 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-150;
+  }
+
+  .page-fade-enter-active,
+  .page-fade-leave-active {
+    transition: opacity 180ms ease, transform 180ms ease;
+  }
+
+  .page-fade-enter-from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+
+  .page-fade-leave-to {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-brand {
+    @apply badge bg-brand-100 text-brand-700;
+  }
+
+  .badge-ink {
+    @apply badge bg-ink-100 text-ink-700;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: #F5F5F4; }
+::-webkit-scrollbar-thumb { background: #D6D3D1; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #A8A29E; }
+
+/* Subtle dot grid pattern for sections */
+.bg-dot-pattern {
+  background-image: radial-gradient(rgba(15, 23, 42, 0.06) 1px, transparent 0);
+  background-size: 20px 20px;
+}
+
+/* Smooth image fade in */
+img { transition: opacity 0.3s ease; }
+
+/* Keep public content comfortable on narrow screens without changing layouts. */
+@media (max-width: 640px) {
+  .btn-primary,
+  .btn-secondary,
+  .btn-brand {
+    min-height: 2.75rem;
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .input-field {
+    min-height: 2.75rem;
+    font-size: 0.9375rem;
+  }
+
+  textarea.input-field {
+    min-height: 7rem;
+  }
+
+  button,
+  a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

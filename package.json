@@ -1,0 +1,43 @@
+{
+  "name": "ashok-tex",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --mode development",
+    "build": "vite build --mode production",
+    "preview": "vite preview --mode production",
+    "server": "cross-env NODE_ENV=development node --env-file=.env.local server/server.js",
+    "start": "cross-env NODE_ENV=production node --env-file=.env.production server/server.js",
+    "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
+    "migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.js"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.112.4",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "express-async-errors": "^3.1.1",
+    "express-rate-limit": "^8.6.2",
+    "helmet": "^8.3.0",
+    "jsonwebtoken": "^9.0.3",
+    "lucide-vue-next": "^0.359.0",
+    "multer": "^2.2.0",
+    "nodemailer": "^6.9.13",
+    "pg": "^8.13.1",
+    "slugify": "^1.6.9",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "autoprefixer": "^10.4.18",
+    "better-sqlite3": "^13.0.3",
+    "concurrently": "^8.2.2",
+    "cross-env": "^10.1.0",
+    "postcss": "^8.4.35",
+    "tailwindcss": "^3.4.1",
+    "vite": "^5.1.6"
+  }
+}

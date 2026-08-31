@@ -1,0 +1,25 @@
+node_modules/
+dist/
+
+# Environments: keep secrets out of Git
+.env
+.env.*
+!.env.example
+!.env.sample
+
+# Local SQLite database (generated on first server run — do not commit real data)
+data-storage/*.db
+data-storage/*.db-shm
+data-storage/*.db-wal
+
+# User-uploaded product images (generated at runtime)
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Logs and OS files
+*.log
+.DS_Store
+
+# Optional: keep local backup files out of Git
+*.bak
+*.backup
