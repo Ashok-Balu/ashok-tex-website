@@ -24,7 +24,13 @@
             </div>
             <div>
               <label class="block text-xs font-bold uppercase tracking-wider text-ink-500 mb-2">Password</label>
-              <input v-model="password" type="password" required class="input-field !py-3.5" autocomplete="current-password" placeholder="Enter your password" />
+              <div class="relative">
+                <input v-model="password" :type="showPassword ? 'text' : 'password'" required class="input-field !py-3.5 pr-12" autocomplete="current-password" placeholder="Enter your password" />
+                <button type="button" @click="showPassword = !showPassword" class="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink-400 hover:text-ink-600">
+                  <Eye v-if="showPassword" class="w-5 h-5" />
+                  <EyeOff v-else class="w-5 h-5" />
+                </button>
+              </div>
             </div>
             <button type="submit" :disabled="loading" class="w-full py-3.5 bg-brand-500 hover:bg-brand-600 disabled:bg-ink-300 text-white font-semibold rounded-xl transition-all text-sm flex items-center justify-center gap-2 shadow-lg shadow-brand-500/15">
               {{ loading ? 'Signing in…' : 'Sign in to workspace' }}<ArrowRight v-if="!loading" class="w-4 h-4" />
@@ -39,7 +45,7 @@
 
 <script setup>
 import { ref } from 'vue';
-import { ArrowRight, ShieldCheck } from 'lucide-vue-next';
+import { ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-vue-next';
 import { useRoute, useRouter } from 'vue-router';
 import { useAdminAuth } from '../../composables/useAdminAuth';
 
@@ -49,6 +55,7 @@ const { login } = useAdminAuth();
 
 const username = ref('');
 const password = ref('');
+const showPassword = ref(false);
 const error = ref('');
 const loading = ref(false);
 
