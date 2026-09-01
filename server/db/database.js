@@ -17,6 +17,14 @@ export const pool = new Pool({
   ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
 });
 
+pool.on('error', (error) => {
+  console.error('[Database Pool Error]', error.message, error.stack);
+});
+
+pool.on('connect', () => {
+  console.log('[Database] Connected to PostgreSQL');
+});
+
 export async function query(text, values = []) {
   return pool.query(text, values);
 }

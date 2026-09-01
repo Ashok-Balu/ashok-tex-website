@@ -140,10 +140,17 @@ if (fs.existsSync(distPath)) {
 }
 
 app.use((error, req, res, next) => {
-  console.error('[API Error]', { method: req.method, path: req.path, message: error.message });
+  const statusCode = error.statusCode || error.status || 500;
+  console.error('[API Error]', { 
+    method: req.method, 
+    path: req.path, 
+    statusCode,
+    message: error.message,
+    stack: error.stack 
+  });
   if (res.headersSent) return next(error);
   const message = process.env.NODE_ENV === 'production' ? 'Unable to process this request.' : error.message;
-  res.status(error.statusCode || 500).json({ success: false, message });
+  res.status(statusCode).json({ success: false, message });
 });
 
 export default app;
