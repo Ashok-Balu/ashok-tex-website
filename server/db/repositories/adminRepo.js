@@ -10,6 +10,12 @@ export async function createAdminUser(username, password, role = 'super_admin') 
   return (await query('INSERT INTO admin_users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, username, role', [username, passwordHash, role])).rows[0];
 }
 
+export async function updateAdminPassword(username, password) {
+  const passwordHash = await bcrypt.hash(password, 10);
+  await query('UPDATE admin_users SET password_hash = $1 WHERE username = $2', [passwordHash, username]);
+  return getAdminByUsername(username);
+}
+
 export async function verifyAdminPassword(username, password) {
   try {
     const user = await getAdminByUsername(username);

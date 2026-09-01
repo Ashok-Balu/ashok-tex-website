@@ -1,3 +1,4 @@
+import bcrypt from 'bcryptjs';
 import { query, withTransaction } from './database.js';
 import { createCategory, getAllCategories } from './repositories/categoryRepo.js';
 import { createProduct } from './repositories/productRepo.js';
@@ -196,7 +197,17 @@ async function seedAdminUser() {
     console.warn('[Seed] Skipped admin user: configure a strong ADMIN_USERNAME and ADMIN_PASSWORD.');
     return;
   }
-  if (await getAdminByUsername(username)) return;
+
+  const existingUser = await getAdminByUsername(username);
+  if (existingUser) {
+    const passwordMatches = await bcrypt.compare(password, existingUser.password_hash);
+    if (!passwordMatches) {
+      await updateAdminPassword(username, password);
+      console.log(`[Seed] Updated admin password for "${username}" to match ADMIN_PASSWORD.`);
+    }
+    return;
+  }
+
   await createAdminUser(username, password);
   console.log(`[Seed] Created default admin user "${username}". Set ADMIN_USERNAME/ADMIN_PASSWORD env vars to customize.`);
 }
