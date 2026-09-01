@@ -103,6 +103,20 @@
         </div>
 
         <div>
+          <label for="purpose" class="block text-sm font-medium text-ink-700 mb-1.5">Purpose of Requirement <span class="text-red-500">*</span></label>
+          <div class="quote-dropdown" @click.stop>
+            <button type="button" class="quote-dropdown-trigger" :class="errors.purpose ? 'is-invalid' : ''" :aria-expanded="activeDropdown === 'purpose'" aria-haspopup="listbox" @click="toggleDropdown('purpose')">
+              <span :class="form.purpose ? 'text-ink-900' : 'text-ink-400'">{{ form.purpose || 'Select purpose' }}</span>
+              <ChevronDown :class="['w-4 h-4 text-ink-400 transition-transform', activeDropdown === 'purpose' ? 'rotate-180' : '']" />
+            </button>
+            <div v-if="activeDropdown === 'purpose'" class="quote-dropdown-menu" role="listbox">
+              <button v-for="option in ['Reselling', 'End Use']" :key="option" type="button" role="option" :aria-selected="form.purpose === option" :class="['quote-dropdown-option', form.purpose === option ? 'is-selected' : '']" @click="chooseDropdown('purpose', option)">{{ option }}</button>
+            </div>
+          </div>
+          <p v-if="errors.purpose" class="text-red-500 text-xs mt-1">{{ errors.purpose }}</p>
+        </div>
+
+        <div>
           <label for="requirements" class="block text-sm font-medium text-ink-700 mb-1.5">Project Requirements <span class="text-red-500">*</span></label>
           <textarea id="requirements" v-model="form.requirements" rows="4" required placeholder="Describe fabric specs, GSM, width, weave, application, delivery timeline, or sample needs..." :class="['input-field resize-none', errors.requirements ? 'border-red-400 focus:ring-red-400' : '']" @blur="validateField('requirements')"></textarea>
           <p v-if="errors.requirements" class="text-red-500 text-xs mt-1">{{ errors.requirements }}</p>
@@ -130,8 +144,8 @@ const route = useRoute();
 const { flat: categories } = useCategoryFlat();
 const productOptions = ref([]);
 
-const form = reactive({ name: '', company: '', email: '', phone: '', category: '', product: '', quantity: '', unit: 'Meter', requirements: '', honeypot: '' });
-const errors = reactive({ name: '', email: '', phone: '', category: '', requirements: '' });
+const form = reactive({ name: '', company: '', email: '', phone: '', category: '', product: '', quantity: '', unit: 'Meter', purpose: '', requirements: '', honeypot: '' });
+const errors = reactive({ name: '', email: '', phone: '', category: '', purpose: '', requirements: '' });
 const status = ref('idle');
 const errorMessage = ref('');
 const activeDropdown = ref('');
@@ -182,6 +196,7 @@ const validateField = (field) => {
     else if (!/^\d{10}$/.test(form.phone)) errors.phone = 'Enter exactly 10 digits';
   }
   if (field === 'category' && !form.category) errors.category = 'Please select a category';
+  if (field === 'purpose' && !form.purpose) errors.purpose = 'Please select the purpose of requirement';
   if (field === 'requirements') {
     if (!form.requirements.trim()) errors.requirements = 'Please describe your requirements';
     else if (form.requirements.trim().length < 10) errors.requirements = 'Please provide at least 10 characters';
@@ -189,8 +204,8 @@ const validateField = (field) => {
 };
 
 const validateForm = () => {
-  ['name', 'email', 'phone', 'category', 'requirements'].forEach(validateField);
-  return !errors.name && !errors.email && !errors.phone && !errors.category && !errors.requirements;
+  ['name', 'email', 'phone', 'category', 'purpose', 'requirements'].forEach(validateField);
+  return !errors.name && !errors.email && !errors.phone && !errors.category && !errors.purpose && !errors.requirements;
 };
 
 const handleSubmit = async () => {
@@ -215,6 +230,7 @@ const handleSubmit = async () => {
       productId: selectedProduct ? selectedProduct.id : null,
       quantity: form.quantity ? Number(form.quantity) : null,
       unit: form.unit,
+      purpose: form.purpose,
       requirements: form.requirements.trim(),
       sourcePage: route.path,
     });
@@ -226,7 +242,7 @@ const handleSubmit = async () => {
 };
 
 const resetForm = () => {
-  Object.assign(form, { name: '', company: '', email: '', phone: '', category: '', product: '', quantity: '', unit: 'Meter', requirements: '', honeypot: '' });
+  Object.assign(form, { name: '', company: '', email: '', phone: '', category: '', product: '', quantity: '', unit: 'Meter', purpose: '', requirements: '', honeypot: '' });
   status.value = 'idle';
 };
 

@@ -1,7 +1,7 @@
 import express from 'express';
 import rateLimit from 'express-rate-limit';
 import { saveEnquiry } from '../db/repositories/enquiryRepo.js';
-import { sanitizeString, validateEmail, validatePhone, validateName, validateMessage } from '../utils/validator.js';
+import { sanitizeString, validateEmail, validatePhone, validateName, validateMessage, validatePurpose } from '../utils/validator.js';
 import { sendEnquiryNotification } from '../utils/email.js';
 
 const router = express.Router();
@@ -22,6 +22,7 @@ router.post('/', enquiryLimiter, async (req, res) => {
     const cleanEmail = sanitizeString(email);
     const cleanPhone = sanitizeString(phone);
     const cleanCategory = sanitizeString(category);
+    const cleanPurpose = sanitizeString(purpose);
     const cleanRequirements = sanitizeString(requirements);
 
     if (!validateName(cleanName)) {
@@ -38,6 +39,9 @@ router.post('/', enquiryLimiter, async (req, res) => {
     }
     if (!validateMessage(cleanRequirements, 10)) {
       return res.status(400).json({ success: false, message: 'Project requirements must be at least 10 characters.' });
+    }
+    if (!validatePurpose(cleanPurpose)) {
+      return res.status(400).json({ success: false, message: 'Please select a valid purpose of requirement.' });
     }
 
     const newEnquiry = await saveEnquiry({

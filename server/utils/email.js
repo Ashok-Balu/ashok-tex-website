@@ -57,6 +57,7 @@ Phone / WhatsApp: ${enquiry.phone}
 Category: ${enquiry.category}
 Product: ${enquiry.product || 'General'}
 Quantity: ${enquiry.quantity || 'N/A'} ${enquiry.unit}
+Purpose of Requirement: ${enquiry.purpose || 'N/A'}
 Requirements:
 ${enquiry.requirements}
 
@@ -74,6 +75,7 @@ Status: NEW
     { label: 'Category', value: enquiry.category },
     { label: 'Product', value: enquiry.product || 'General' },
     { label: 'Quantity', value: `${enquiry.quantity || 'N/A'} ${enquiry.unit || ''}`.trim() },
+    { label: 'Purpose of Requirement', value: enquiry.purpose || 'N/A' },
     { label: 'Requirements', value: enquiry.requirements },
     { label: 'Source Page', value: enquiry.sourcePage || '/request-quote' },
   ]);

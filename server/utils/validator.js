@@ -22,3 +22,10 @@ export function validateName(name) {
 export function validateMessage(message, minLength = 5) {
   return typeof message === 'string' && message.trim().length >= minLength;
 }
+
+export function validatePurpose(value) {
+  const normalized = typeof value === 'string' ? value.trim() : '';
+  if (!normalized) return false;
+  const allowed = ['Reselling', 'End Use'];
+  return allowed.some((option) => option.toLowerCase() === normalized.toLowerCase());
+}

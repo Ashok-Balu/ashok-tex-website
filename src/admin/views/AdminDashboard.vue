@@ -38,6 +38,20 @@
           <p class="mt-2 text-2xl font-bold text-ink-950">{{ stats.visitors.visitsThisMonth }}</p>
         </div>
       </div>
+
+      <div v-if="stats.visitors.dailyTrend?.length" class="mt-5">
+        <div class="flex items-center justify-between gap-3 mb-3">
+          <p class="text-xs font-semibold uppercase tracking-[0.14em] text-ink-400">Last 7 days</p>
+          <span class="text-[11px] text-ink-500">Visitors</span>
+        </div>
+        <div class="flex items-end gap-2 h-28 sm:h-32 rounded-2xl bg-surface-50 p-3 border border-surface-200">
+          <div v-for="day in stats.visitors.dailyTrend" :key="day.date" class="flex-1 flex flex-col items-center justify-end gap-2 h-full">
+            <span class="block w-full rounded-t-xl bg-indigo-500/90 transition-all duration-300" :style="{ height: `${Math.max((day.visitors / maxDailyVisitors) * 100, 8)}%` }" :title="`${day.date}: ${day.visitors} visitors`"></span>
+            <span class="text-[10px] text-ink-500">{{ new Date(day.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) }}</span>
+          </div>
+        </div>
+      </div>
+
       <div v-if="stats.visitors.topPages?.length" class="mt-4">
         <p class="text-xs font-semibold uppercase tracking-[0.14em] text-ink-400 mb-2">Top pages</p>
         <ul class="space-y-2 text-sm text-ink-700">
@@ -83,7 +97,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { ArrowUpRight, BarChart3, CheckCircle2, Eye, FolderTree, Inbox, Package, Star, TrendingUp, Users } from 'lucide-vue-next';
 import { adminApi } from '../../services/api';
 import { useAdminAuth } from '../../composables/useAdminAuth';
@@ -91,6 +105,10 @@ import { useAdminAuth } from '../../composables/useAdminAuth';
 const stats = ref(null);
 
 const cards = ref([]);
+const maxDailyVisitors = computed(() => {
+  const values = stats.value?.visitors?.dailyTrend?.map((item) => item.visitors) || [0];
+  return Math.max(...values, 1);
+});
 const { user } = useAdminAuth();
 const userName = user.value?.username || 'there';
 
