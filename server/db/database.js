@@ -11,10 +11,12 @@ if (!process.env.DATABASE_URL) {
 
 export const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  max: Number(process.env.DATABASE_POOL_MAX || 5),
-  idleTimeoutMillis: 10000,
-  connectionTimeoutMillis: 10000,
+  max: Number(process.env.DATABASE_POOL_MAX || 10),
+  min: 2,
+  idleTimeoutMillis: 5000,
+  connectionTimeoutMillis: 5000,
   ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
+  statement_timeout: 30000,
 });
 
 pool.on('error', (error) => {

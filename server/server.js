@@ -18,6 +18,7 @@ import contactRoutes from './routes/contact.js';
 import categoryRoutes from './routes/categories.js';
 import productRoutes from './routes/products.js';
 import testimonialRoutes from './routes/testimonials.js';
+import analyticsRoutes from './routes/analytics.js';
 import settingsRoutes from './routes/settings.js';
 import sitemapRoutes from './routes/sitemap.js';
 
@@ -42,10 +43,11 @@ app.set('trust proxy', 1);
 
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  limit: 200,
+  limit: 1000,
   standardHeaders: true,
   legacyHeaders: false,
   message: { success: false, message: 'Too many requests. Please try again shortly.' },
+  skip: (req) => req.path.startsWith('/api/admin/'),
 });
 
 const configuredOrigins = (process.env.CORS_ORIGINS || process.env.SITE_URL || '')
@@ -74,10 +76,22 @@ app.use(helmet({
     preload: true,
   },
 }));
-app.use(compression({ level: 6, threshold: 1024 }));
+app.use(compression({ level: 9, threshold: 512 }));
 app.use('/api', apiLimiter);
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
+
+// Add response time tracking for debugging
+app.use((req, res, next) => {
+  res.set('X-Response-Time-Ms', Date.now().toString());
+  res.on('finish', () => {
+    const duration = Date.now() - parseInt(res.get('X-Response-Time-Ms'));
+    if (duration > 1000) {
+      console.warn(`[Slow Request] ${req.method} ${req.path} took ${duration}ms`);
+    }
+  });
+  next();
+});
 
 function auditAdminMutation(req, res, next) {
   if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(req.method)) {
@@ -99,6 +113,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/testimonials', testimonialRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/analytics', analyticsRoutes);
 app.use('/', sitemapRoutes);
 
 // ─── Admin API Routes (all protected except login) ─────────────────────────

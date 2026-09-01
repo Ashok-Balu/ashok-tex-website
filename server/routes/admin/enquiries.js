@@ -2,27 +2,80 @@ import express from 'express';
 import { getEnquiries, updateEnquiryStatus, deleteEnquiry, getContacts, updateContactStatus, deleteContact } from '../../db/repositories/enquiryRepo.js';
 
 const router = express.Router();
+let enquiryCache = { data: null, timestamp: 0 };
+let contactCache = { data: null, timestamp: 0 };
+const CACHE_TTL = 3000; // 3 seconds
 
 router.get('/', async (req, res) => {
-  const { status, page = 1, limit = 50 } = req.query;
-  const pageNum = Math.max(1, Number(page));
-  const pageSize = Math.min(200, Math.max(1, Number(limit)));
-  const offset = (pageNum - 1) * pageSize;
-  const data = await getEnquiries({ status: status || undefined });
-  const total = data.length;
-  const paged = data.slice(offset, offset + pageSize);
-  res.json({ success: true, data: paged, pagination: { total, page: pageNum, limit: pageSize, totalPages: Math.ceil(total / pageSize) || 1 } });
+  try {
+    const { status, page = 1, limit = 50 } = req.query;
+    const startTime = Date.now();
+    const now = Date.now();
+    
+    // Return cached data if available
+    if (enquiryCache.data && (now - enquiryCache.timestamp) < CACHE_TTL && !status) {
+      res.set('X-Cache', 'HIT');
+      const pageNum = Math.max(1, Number(page));
+      const pageSize = Math.min(200, Math.max(1, Number(limit)));
+      const offset = (pageNum - 1) * pageSize;
+      const total = enquiryCache.data.length;
+      const paged = enquiryCache.data.slice(offset, offset + pageSize);
+      return res.json({ success: true, data: paged, pagination: { total, page: pageNum, limit: pageSize, totalPages: Math.ceil(total / pageSize) || 1 } });
+    }
+    
+    const pageNum = Math.max(1, Number(page));
+    const pageSize = Math.min(200, Math.max(1, Number(limit)));
+    const offset = (pageNum - 1) * pageSize;
+    const data = await getEnquiries({ status: status || undefined });
+    
+    if (!status) enquiryCache = { data, timestamp: now };
+    
+    const total = data.length;
+    const paged = data.slice(offset, offset + pageSize);
+    const duration = Date.now() - startTime;
+    
+    res.set('X-Query-Time', duration.toString());
+    if (!status) res.set('Cache-Control', 'private, max-age=3');
+    res.json({ success: true, data: paged, pagination: { total, page: pageNum, limit: pageSize, totalPages: Math.ceil(total / pageSize) || 1 } });
+  } catch (error) {
+    console.error('[Admin Enquiries Error]', error.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch enquiries.' });
+  }
 });
 
 router.get('/contacts', async (req, res) => {
-  const { page = 1, limit = 50 } = req.query;
-  const pageNum = Math.max(1, Number(page));
-  const pageSize = Math.min(200, Math.max(1, Number(limit)));
-  const offset = (pageNum - 1) * pageSize;
-  const data = await getContacts();
-  const total = data.length;
-  const paged = data.slice(offset, offset + pageSize);
-  res.json({ success: true, data: paged, pagination: { total, page: pageNum, limit: pageSize, totalPages: Math.ceil(total / pageSize) || 1 } });
+  try {
+    const { page = 1, limit = 50 } = req.query;
+    const startTime = Date.now();
+    const now = Date.now();
+    
+    if (contactCache.data && (now - contactCache.timestamp) < CACHE_TTL) {
+      res.set('X-Cache', 'HIT');
+      const pageNum = Math.max(1, Number(page));
+      const pageSize = Math.min(200, Math.max(1, Number(limit)));
+      const offset = (pageNum - 1) * pageSize;
+      const total = contactCache.data.length;
+      const paged = contactCache.data.slice(offset, offset + pageSize);
+      return res.json({ success: true, data: paged, pagination: { total, page: pageNum, limit: pageSize, totalPages: Math.ceil(total / pageSize) || 1 } });
+    }
+    
+    const pageNum = Math.max(1, Number(page));
+    const pageSize = Math.min(200, Math.max(1, Number(limit)));
+    const offset = (pageNum - 1) * pageSize;
+    const data = await getContacts();
+    contactCache = { data, timestamp: now };
+    
+    const total = data.length;
+    const paged = data.slice(offset, offset + pageSize);
+    const duration = Date.now() - startTime;
+    
+    res.set('X-Query-Time', duration.toString());
+    res.set('Cache-Control', 'private, max-age=3');
+    res.json({ success: true, data: paged, pagination: { total, page: pageNum, limit: pageSize, totalPages: Math.ceil(total / pageSize) || 1 } });
+  } catch (error) {
+    console.error('[Admin Contacts Error]', error.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch contacts.' });
+  }
 });
 
 router.put('/contacts/:id/status', async (req, res) => {

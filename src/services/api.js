@@ -131,6 +131,9 @@ export const api = {
   contact: {
     send: (data) => request('/contact', { method: 'POST', body: data }),
   },
+  analytics: {
+    visit: (data) => request('/analytics/visit', { method: 'POST', body: data }),
+  },
 };
 
 // ─── Admin API (requires auth token) ────────────────────────────────────────

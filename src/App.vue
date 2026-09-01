@@ -45,7 +45,7 @@ import Footer from './components/Footer.vue';
 import MobileBottomBar from './components/MobileBottomBar.vue';
 import { injectStructuredData, getOrganizationSchema } from './utils/schema';
 import { useCompany } from './composables/useCompany';
-import { apiLoading } from './services/api';
+import { apiLoading, api } from './services/api';
 
 const route = useRoute();
 const isAdminRoute = computed(() => !!route.meta?.isAdmin);
@@ -91,4 +91,22 @@ watch(company, (val) => {
 }, { immediate: true });
 
 watch(() => route.fullPath, () => updateHeadMeta(), { immediate: true });
+
+onMounted(() => {
+  if (route.meta?.isAdmin) return;
+
+  const visitorKey = 'ashoktex_visitor_session';
+  let sessionId = localStorage.getItem(visitorKey);
+  if (!sessionId) {
+    sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem(visitorKey, sessionId);
+  }
+
+  api.analytics.visit({
+    sessionId,
+    path: route.fullPath,
+    referrer: document.referrer || '',
+    userAgent: navigator.userAgent,
+  }).catch(() => {});
+});
 </script>

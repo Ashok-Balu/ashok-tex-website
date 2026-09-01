@@ -7,16 +7,30 @@ import {
 const router = express.Router();
 
 router.get('/', async (req, res) => {
-  const { category, search, page, limit, status } = req.query;
-  const result = await listProducts({
-    categorySlug: category || undefined,
-    search: search || undefined,
-    published: status === 'published' ? true : status === 'unpublished' ? false : 'all',
-    sort: 'display_order',
-    page: page ? Number(page) : 1,
-    limit: limit ? Number(limit) : 50,
-  });
-  res.json({ success: true, data: result.data, pagination: result.pagination });
+  try {
+    const startTime = Date.now();
+    const { category, search, page, limit, status } = req.query;
+    const pageNum = Math.max(1, Number(page) || 1);
+    const pageSize = Math.min(100, Number(limit) || 50);
+    
+    const result = await listProducts({
+      categorySlug: category || undefined,
+      search: search || undefined,
+      published: status === 'published' ? true : status === 'unpublished' ? false : 'all',
+      sort: 'display_order',
+      page: pageNum,
+      limit: pageSize,
+    });
+    
+    const duration = Date.now() - startTime;
+    res.set('X-Query-Time', duration.toString());
+    if (duration > 1000) console.warn(`[Admin Products List] took ${duration}ms`);
+    
+    res.json({ success: true, data: result.data, pagination: result.pagination });
+  } catch (error) {
+    console.error('[Admin Products Error]', error.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch products.' });
+  }
 });
 
 router.get('/:id', async (req, res) => {

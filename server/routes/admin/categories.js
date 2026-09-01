@@ -5,13 +5,43 @@ import {
 } from '../../db/repositories/categoryRepo.js';
 
 const router = express.Router();
+let categoryCache = { data: null, timestamp: 0 };
+const CACHE_TTL = 5000; // 5 seconds
 
 router.get('/', async (req, res) => {
-  res.json({ success: true, data: await getAllCategories({ includeInactive: true }) });
+  try {
+    const now = Date.now();
+    if (categoryCache.data && (now - categoryCache.timestamp) < CACHE_TTL) {
+      res.set('X-Cache', 'HIT');
+      return res.json({ success: true, data: categoryCache.data });
+    }
+    
+    const startTime = Date.now();
+    const categories = await getAllCategories({ includeInactive: true });
+    categoryCache = { data: categories, timestamp: now };
+    const duration = Date.now() - startTime;
+    
+    res.set('X-Query-Time', duration.toString());
+    res.set('Cache-Control', 'private, max-age=5');
+    res.json({ success: true, data: categories });
+  } catch (error) {
+    console.error('[Admin Categories Error]', error.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch categories.' });
+  }
 });
 
 router.get('/tree', async (req, res) => {
-  res.json({ success: true, data: await getCategoryTree({ includeInactive: true }) });
+  try {
+    const startTime = Date.now();
+    const tree = await getCategoryTree({ includeInactive: true });
+    const duration = Date.now() - startTime;
+    res.set('X-Query-Time', duration.toString());
+    res.set('Cache-Control', 'private, max-age=5');
+    res.json({ success: true, data: tree });
+  } catch (error) {
+    console.error('[Admin Category Tree Error]', error.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch category tree.' });
+  }
 });
 
 router.get('/:id', async (req, res) => {

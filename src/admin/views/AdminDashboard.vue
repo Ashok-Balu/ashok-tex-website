@@ -16,6 +16,39 @@
       </div>
     </div>
 
+    <div v-if="stats?.visitors" class="bg-white rounded-2xl border border-surface-200 p-4 sm:p-6 mb-6">
+      <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
+        <div>
+          <p class="text-xs font-bold uppercase tracking-[0.16em] text-indigo-600">Website traffic</p>
+          <h2 class="font-display text-xl sm:text-2xl font-bold text-ink-950 mt-1">Visitors overview</h2>
+        </div>
+        <Users class="w-4 sm:w-5 h-4 sm:h-5 text-indigo-500 shrink-0" />
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div class="rounded-xl bg-indigo-50 border border-indigo-100 p-4">
+          <p class="text-xs uppercase tracking-wide text-indigo-600 font-semibold">Unique visitors</p>
+          <p class="mt-2 text-2xl font-bold text-ink-950">{{ stats.visitors.totalVisitors }}</p>
+        </div>
+        <div class="rounded-xl bg-emerald-50 border border-emerald-100 p-4">
+          <p class="text-xs uppercase tracking-wide text-emerald-600 font-semibold">Today</p>
+          <p class="mt-2 text-2xl font-bold text-ink-950">{{ stats.visitors.visitsToday }}</p>
+        </div>
+        <div class="rounded-xl bg-amber-50 border border-amber-100 p-4">
+          <p class="text-xs uppercase tracking-wide text-amber-600 font-semibold">Last 30 days</p>
+          <p class="mt-2 text-2xl font-bold text-ink-950">{{ stats.visitors.visitsThisMonth }}</p>
+        </div>
+      </div>
+      <div v-if="stats.visitors.topPages?.length" class="mt-4">
+        <p class="text-xs font-semibold uppercase tracking-[0.14em] text-ink-400 mb-2">Top pages</p>
+        <ul class="space-y-2 text-sm text-ink-700">
+          <li v-for="page in stats.visitors.topPages" :key="page.path" class="flex items-center justify-between gap-3 rounded-lg bg-surface-50 px-3 py-2">
+            <span class="truncate">{{ page.path || '/' }}</span>
+            <span class="font-semibold text-ink-900">{{ page.visits }}</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+
     <div v-if="stats" class="bg-white rounded-2xl border border-surface-200 p-4 sm:p-6">
       <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-4">
         <div>
@@ -51,7 +84,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { ArrowUpRight, BarChart3, CheckCircle2, Eye, FolderTree, Inbox, Package, Star, TrendingUp } from 'lucide-vue-next';
+import { ArrowUpRight, BarChart3, CheckCircle2, Eye, FolderTree, Inbox, Package, Star, TrendingUp, Users } from 'lucide-vue-next';
 import { adminApi } from '../../services/api';
 import { useAdminAuth } from '../../composables/useAdminAuth';
 
