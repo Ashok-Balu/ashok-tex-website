@@ -1,11 +1,19 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { saveContactMessage } from '../db/repositories/enquiryRepo.js';
 import { sanitizeString, validateEmail, validatePhone, validateName, validateMessage } from '../utils/validator.js';
 import { sendContactNotification } from '../utils/email.js';
 
 const router = express.Router();
+const contactLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many contact requests. Please try again later.' },
+});
 
-router.post('/', async (req, res) => {
+router.post('/', contactLimiter, async (req, res) => {
   try {
     const { name, email, phone, message } = req.body;
 

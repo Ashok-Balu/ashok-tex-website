@@ -14,17 +14,22 @@ const loginLimiter = rateLimit({
 });
 
 router.post('/login', loginLimiter, async (req, res) => {
-  const username = sanitizeString(req.body.username);
-  const password = String(req.body.password || '');
-  if (!username || !password) {
-    return res.status(400).json({ success: false, message: 'Username and password are required.' });
+  try {
+    const username = sanitizeString(req.body.username);
+    const password = String(req.body.password || '');
+    if (!username || !password) {
+      return res.status(400).json({ success: false, message: 'Username and password are required.' });
+    }
+    const user = await verifyAdminPassword(username, password);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Invalid username or password.' });
+    }
+    const token = signToken({ id: user.id, username: user.username, role: user.role });
+    res.json({ success: true, token, user });
+  } catch (error) {
+    console.error('Login error:', error.message, error.stack);
+    res.status(500).json({ success: false, message: 'Login failed. Please try again.' });
   }
-  const user = await verifyAdminPassword(username, password);
-  if (!user) {
-    return res.status(401).json({ success: false, message: 'Invalid username or password.' });
-  }
-  const token = signToken({ id: user.id, username: user.username, role: user.role });
-  res.json({ success: true, token, user });
 });
 
 export default router;

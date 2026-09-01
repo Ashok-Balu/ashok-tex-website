@@ -11,10 +11,18 @@ export async function createAdminUser(username, password, role = 'super_admin') 
 }
 
 export async function verifyAdminPassword(username, password) {
-  const user = await getAdminByUsername(username);
-  if (!user) return null;
-  const valid = await bcrypt.compare(password, user.password_hash);
-  return valid ? { id: user.id, username: user.username, role: user.role } : null;
+  try {
+    const user = await getAdminByUsername(username);
+    if (!user) {
+      console.warn('Admin user not found:', username);
+      return null;
+    }
+    const valid = await bcrypt.compare(password, user.password_hash);
+    return valid ? { id: user.id, username: user.username, role: user.role } : null;
+  } catch (error) {
+    console.error('Error verifying admin password:', error.message);
+    throw error;
+  }
 }
 
 export async function recordAudit({ username, action, entity, entityId, oldValue, newValue }) {

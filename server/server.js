@@ -1,7 +1,9 @@
 import express from 'express';
 import 'express-async-errors';
 import cors from 'cors';
+import compression from 'compression';
 import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
 import dotenv from 'dotenv';
 import path from 'path';
 import fs from 'fs';
@@ -38,6 +40,14 @@ const PORT = process.env.PORT || 5000;
 app.disable('x-powered-by');
 app.set('trust proxy', 1);
 
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests. Please try again shortly.' },
+});
+
 const configuredOrigins = (process.env.CORS_ORIGINS || process.env.SITE_URL || '')
   .split(',').map((origin) => origin.trim()).filter(Boolean);
 const allowedOrigins = new Set(configuredOrigins);
@@ -51,8 +61,21 @@ app.use(cors({
     if (!origin || allowedOrigins.has(origin)) return callback(null, true);
     return callback(new Error('Origin is not allowed by CORS.'));
   },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 }));
-app.use(helmet({ contentSecurityPolicy: false }));
+app.use(helmet({
+  contentSecurityPolicy: false,
+  crossOriginResourcePolicy: false,
+  hsts: {
+    maxAge: 31536000,
+    includeSubDomains: true,
+    preload: true,
+  },
+}));
+app.use(compression({ level: 6, threshold: 1024 }));
+app.use('/api', apiLimiter);
 app.use(express.json({ limit: '2mb' }));
 app.use(express.urlencoded({ extended: true, limit: '2mb' }));
 
@@ -101,7 +124,16 @@ app.get('/api/health', (req, res) => {
 // Production Static Serving
 const distPath = path.join(__dirname, '../dist');
 if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
+  app.use(express.static(distPath, {
+    maxAge: '1d',
+    etag: true,
+    immutable: false,
+    setHeaders(res, filePath) {
+      if (filePath.endsWith('.js') || filePath.endsWith('.css')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }));
   app.get('*', (req, res) => {
     res.sendFile(path.join(distPath, 'index.html'));
   });

@@ -1,11 +1,19 @@
 import express from 'express';
+import rateLimit from 'express-rate-limit';
 import { saveEnquiry } from '../db/repositories/enquiryRepo.js';
 import { sanitizeString, validateEmail, validatePhone, validateName, validateMessage } from '../utils/validator.js';
 import { sendEnquiryNotification } from '../utils/email.js';
 
 const router = express.Router();
+const enquiryLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  limit: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many quote requests. Please try again later.' },
+});
 
-router.post('/', async (req, res) => {
+router.post('/', enquiryLimiter, async (req, res) => {
   try {
     const { name, company, email, phone, country, category, categoryId, product, productId, quantity, unit, purpose, requirements, sourcePage } = req.body;
 
