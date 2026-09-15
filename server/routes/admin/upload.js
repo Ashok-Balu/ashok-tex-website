@@ -1,17 +1,17 @@
 import express from 'express';
-import { createClient } from '@supabase/supabase-js';
+import { v2 as cloudinary } from 'cloudinary';
 import { createStorageFilename, upload } from '../../middleware/upload.js';
 
 const router = express.Router();
-const bucket = process.env.SUPABASE_STORAGE_BUCKET || 'uploads';
-
-function getStorageClient() {
-  const secretKey = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!process.env.SUPABASE_URL || !secretKey || secretKey.includes('YOUR_')) {
-    throw new Error('Supabase Storage is not configured.');
+function configureCloudinary() {
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    throw new Error('Cloudinary is not configured.');
   }
-  return createClient(process.env.SUPABASE_URL, secretKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+    secure: true,
   });
 }
 
@@ -21,19 +21,20 @@ router.post('/', upload.array('images', 20), async (req, res) => {
   }
   try {
     const startTime = Date.now();
-    const storage = getStorageClient();
+    configureCloudinary();
     
-    // Process up to 5 files concurrently to avoid overwhelming server
+    // Process uploads in parallel while keeping the admin request responsive.
     const uploadPromises = req.files.map(async (file) => {
       const filename = createStorageFilename(file.originalname);
-      const { error } = await storage.storage.from(bucket).upload(filename, file.buffer, {
-        contentType: file.mimetype,
-        upsert: false,
-        cacheControl: '3600',
+      const result = await new Promise((resolve, reject) => {
+        cloudinary.uploader.upload_stream({
+          folder: process.env.CLOUDINARY_FOLDER || 'ashok-tex',
+          public_id: filename.replace(/\.[^.]+$/, ''),
+          resource_type: 'image',
+          invalidate: true,
+        }, (error, response) => error ? reject(error) : resolve(response)).end(file.buffer);
       });
-      if (error) throw error;
-      const { data } = storage.storage.from(bucket).getPublicUrl(filename);
-      return { url: data.publicUrl, filename };
+      return { url: result.secure_url, filename: result.public_id, publicId: result.public_id };
     });
     
     const files = await Promise.all(uploadPromises);

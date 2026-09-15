@@ -214,7 +214,7 @@ async function uploadImages(event) {
       form.value.images.push({ url: f.url, altText: form.value.name || '', isPrimary: form.value.images.length === 0 && i === 0 });
     });
   } catch (error) {
-    formError.value = error.message || 'Image upload failed. Configure Supabase Storage and try again.';
+    formError.value = error.message || 'Image upload failed. Configure Cloudinary and try again.';
   } finally {
     uploading.value = false;
     event.target.value = '';

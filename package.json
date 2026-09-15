@@ -4,16 +4,16 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite --mode development",
+    "dev": "vite --mode production",
     "build": "vite build --mode production",
     "preview": "vite preview --mode production",
-    "server": "cross-env NODE_ENV=development node --env-file=.env.local server/server.js",
+    "server": "cross-env NODE_ENV=development node --env-file=.env.production server/server.js",
     "start": "cross-env NODE_ENV=production node --env-file=.env.production server/server.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
-    "migrate:sqlite": "node scripts/migrate-sqlite-to-postgres.js"
+    "migrate:cloudinary": "node --env-file=.env.production scripts/migrate-images-to-cloudinary.js",
+    "migrate:mongodb-prod": "node --env-file=.env.production scripts/copy-mongodb-database.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.112.4",
     "bcryptjs": "^3.0.3",
     "compression": "^1.8.1",
     "cors": "^2.8.5",
@@ -25,6 +25,8 @@
     "jsonwebtoken": "^9.0.3",
     "lucide-vue-next": "^0.359.0",
     "multer": "^2.2.0",
+    "cloudinary": "^2.7.0",
+    "mongodb": "^6.20.0",
     "nodemailer": "^6.9.13",
     "pg": "^8.13.1",
     "slugify": "^1.6.9",

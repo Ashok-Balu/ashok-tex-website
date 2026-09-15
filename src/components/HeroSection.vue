@@ -6,15 +6,15 @@
       <img
         src="/powerloom-fabric.jpg"
         alt="Close-up of checkered powerloom fabric"
-        class="w-full h-full object-cover object-center opacity-65"
+        class="w-full h-full object-cover object-center opacity-75 scale-105"
         loading="eager"
       />
-      <div class="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/65 to-ink-950/5"></div>
-      <div class="absolute inset-0 bg-gradient-to-t from-ink-950/80 via-transparent to-ink-950/20"></div>
+      <div class="absolute inset-0 bg-gradient-to-r from-ink-950 via-ink-950/70 to-ink-950/10"></div>
+      <div class="absolute inset-0 bg-gradient-to-t from-ink-950/90 via-transparent to-ink-950/15"></div>
     </div>
 
     <!-- Content -->
-    <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24">
+    <div class="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-24 animate-slide-up">
       <div class="max-w-3xl">
 
         <!-- Badge -->
@@ -24,7 +24,7 @@
         </div>
 
         <!-- Headline -->
-        <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-white leading-[1.05] mb-6">
+        <h1 class="font-display text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-white leading-[1.05] tracking-tight mb-6">
           Textiles That<br>
           <span class="text-brand-400">Move Business</span><br>
           Forward.

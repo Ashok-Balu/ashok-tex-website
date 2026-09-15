@@ -22,10 +22,11 @@
         >
           <div class="aspect-[3/4] overflow-hidden">
             <img
-              :src="col.image"
+              :src="optimizeImageUrl(col.image, { width: 900 })"
               :alt="col.name"
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-600 ease-out"
               loading="lazy"
+              decoding="async"
             />
           </div>
           <div class="absolute inset-0 bg-gradient-to-t from-ink-950/90 via-ink-950/30 to-transparent"></div>
@@ -52,6 +53,7 @@
 
 <script setup>
 import { useCategoryFlat } from '../composables/useCategories';
+import { optimizeImageUrl } from '../services/api';
 
 defineProps({ title: { type: String, default: '' }, subtitle: { type: String, default: '' } });
 

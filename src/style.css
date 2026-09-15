@@ -6,11 +6,13 @@
   html {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     background: #fafaf9;
+    scroll-behavior: smooth;
   }
 
   body {
     min-width: 320px;
     background: #fafaf9;
+    overflow-x: hidden;
   }
 
   h1, h2, h3, h4, .font-display {
@@ -25,15 +27,15 @@
 
 @layer components {
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-ink-900 text-white text-sm font-semibold rounded-xl hover:bg-brand-600 transition-all duration-200 shadow-sm hover:shadow-md;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-ink-900 text-white text-sm font-semibold rounded-xl hover:bg-brand-600 transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5;
   }
 
   .btn-secondary {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-ink-900 text-sm font-semibold rounded-xl border-2 border-ink-900 hover:bg-ink-900 hover:text-white transition-all duration-200;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-ink-900 text-sm font-semibold rounded-xl border-2 border-ink-900 hover:bg-ink-900 hover:text-white transition-all duration-200 hover:-translate-y-0.5;
   }
 
   .btn-brand {
-    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-500 text-white text-sm font-semibold rounded-xl hover:bg-brand-600 transition-all duration-200 shadow-sm hover:shadow-md;
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 bg-brand-500 text-white text-sm font-semibold rounded-xl hover:bg-brand-600 transition-all duration-200 shadow-sm hover:shadow-md hover:-translate-y-0.5;
   }
 
   .btn-ghost {
@@ -41,11 +43,11 @@
   }
 
   .section-label {
-    @apply inline-block text-xs font-semibold uppercase tracking-widest text-brand-600 mb-3;
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-brand-600 mb-3;
   }
 
   .section-title {
-    @apply font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-ink-900 leading-tight;
+    @apply font-display text-3xl sm:text-4xl lg:text-5xl font-bold text-ink-900 leading-[1.08] tracking-tight;
   }
 
   .section-body {
@@ -53,11 +55,11 @@
   }
 
   .card {
-    @apply bg-white rounded-2xl shadow-card border border-surface-200 overflow-hidden transition-all duration-300 hover:shadow-card-hover;
+    @apply bg-white rounded-2xl shadow-card border border-surface-200 overflow-hidden transition-all duration-300 hover:shadow-card-hover hover:-translate-y-1;
   }
 
   .input-field {
-    @apply w-full px-4 py-3 bg-white border border-surface-300 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-150;
+    @apply w-full px-4 py-3 bg-white border border-surface-300 rounded-xl text-sm text-ink-900 placeholder-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-150 shadow-sm;
   }
 
   .page-fade-enter-active,
@@ -100,11 +102,36 @@
   background-size: 20px 20px;
 }
 
+.public-main {
+  position: relative;
+  isolation: isolate;
+}
+
+.public-main > *:not(section:first-child) {
+  position: relative;
+}
+
+.soft-section {
+  background: linear-gradient(180deg, #ffffff 0%, #fffaf2 100%);
+}
+
 /* Smooth image fade in */
 img { transition: opacity 0.3s ease; }
 
 /* Keep public content comfortable on narrow screens without changing layouts. */
 @media (max-width: 640px) {
+  .public-main {
+    padding-bottom: calc(4.75rem + env(safe-area-inset-bottom));
+  }
+
+  .section-title {
+    font-size: 2rem;
+  }
+
+  .section-body {
+    font-size: 0.9375rem;
+  }
+
   .btn-primary,
   .btn-secondary,
   .btn-brand {

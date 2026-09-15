@@ -1,144 +1,24 @@
-import { query, withTransaction } from '../database.js';
+import { collection, nextId, nextDisplayOrder } from './mongoHelpers.js';
 import { generateUniqueSlug } from '../../utils/slug.js';
 import { getSubcategoryIds } from './categoryRepo.js';
-
-async function slugExists(slug, excludeId) {
-  const result = await query(excludeId ? 'SELECT id FROM products WHERE slug = $1 AND id != $2' : 'SELECT id FROM products WHERE slug = $1', excludeId ? [slug, excludeId] : [slug]);
-  return result.rowCount > 0;
-}
-
-async function attachRelations(product) {
-  if (!product) return product;
-  const [images, attributes, category] = await Promise.all([
-    query('SELECT * FROM product_images WHERE product_id = $1 ORDER BY is_primary DESC, display_order ASC', [product.id]),
-    query('SELECT * FROM product_attributes WHERE product_id = $1 ORDER BY display_order ASC', [product.id]),
-    product.category_id ? query('SELECT * FROM categories WHERE id = $1', [product.category_id]) : { rows: [] },
-  ]);
-  return {
-    ...product,
-    tags: product.tags ? product.tags.split(',').map((tag) => tag.trim()).filter(Boolean) : [],
-    images: images.rows.map((image) => ({ id: image.id, url: image.url, altText: image.alt_text, isPrimary: !!image.is_primary, displayOrder: image.display_order })),
-    specifications: attributes.rows.filter((attribute) => attribute.value && String(attribute.value).trim()).map((attribute) => ({ id: attribute.id, label: attribute.name, value: attribute.unit ? `${attribute.value} ${attribute.unit}` : attribute.value, rawValue: attribute.value, unit: attribute.unit })),
-    category: category.rows[0] ? { id: category.rows[0].id, name: category.rows[0].name, slug: category.rows[0].slug } : null,
-  };
-}
-
-export async function listProducts({ categoryId, categorySlug, search, featured, latest, published = true, sort = 'display_order', page = 1, limit = 24, tags } = {}) {
-  const clauses = [];
-  const values = [];
-  const add = (clause, value) => { values.push(value); clauses.push(clause.replace('?', `$${values.length}`)); };
-  if (published !== 'all') add('published = ?', !!published);
-  let categoryIds;
-  if (categorySlug) { const category = (await query('SELECT id FROM categories WHERE slug = $1', [categorySlug])).rows[0]; categoryIds = category ? await getSubcategoryIds(category.id) : [-1]; }
-  else if (categoryId) categoryIds = await getSubcategoryIds(categoryId);
-  if (categoryIds) { const placeholders = categoryIds.map((id) => { values.push(id); return `$${values.length}`; }); clauses.push(`category_id IN (${placeholders.join(',')})`); }
-  if (featured) clauses.push('featured = true');
-  if (latest) clauses.push('is_latest = true');
-  if (search && search.trim()) { values.push(`%${search.trim().toLowerCase()}%`); const placeholder = `$${values.length}`; clauses.push(`(LOWER(name) LIKE ${placeholder} OR LOWER(description) LIKE ${placeholder} OR LOWER(short_description) LIKE ${placeholder} OR LOWER(tags) LIKE ${placeholder} OR id IN (SELECT product_id FROM product_attributes WHERE LOWER(value) LIKE ${placeholder} OR LOWER(name) LIKE ${placeholder}) OR category_id IN (SELECT id FROM categories WHERE LOWER(name) LIKE ${placeholder}))`); }
-  if (tags) for (const tag of (Array.isArray(tags) ? tags : [tags])) { values.push(`%,${tag.trim()},%`); clauses.push(`(',' || tags || ',') LIKE $${values.length}`); }
-  const where = clauses.length ? `WHERE ${clauses.join(' AND ')}` : '';
-  const order = { display_order: 'display_order ASC, name ASC', 'name-asc': 'name ASC', 'name-desc': 'name DESC', newest: 'created_at DESC', 'price-asc': 'price_min ASC', 'price-desc': 'price_max DESC', featured: 'featured DESC, display_order ASC' }[sort] || 'display_order ASC, name ASC';
-  const total = (await query(`SELECT COUNT(*)::int AS count FROM products ${where}`, values)).rows[0].count;
-  const offset = (Math.max(1, Number(page)) - 1) * Number(limit);
-  const rows = await query(`SELECT * FROM products ${where} ORDER BY ${order} LIMIT $${values.length + 1} OFFSET $${values.length + 2}`, [...values, Number(limit), offset]);
-
-  const productRows = rows.rows;
-  const productIds = productRows.map((row) => row.id);
-  const categoryIdsForRows = [...new Set(productRows.map((row) => row.category_id).filter(Boolean))];
-
-  const [imagesResult, attributesResult, categoriesResult] = await Promise.all([
-    productIds.length ? query('SELECT * FROM product_images WHERE product_id = ANY($1::int[]) ORDER BY product_id, is_primary DESC, display_order ASC', [productIds]) : { rows: [] },
-    productIds.length ? query('SELECT * FROM product_attributes WHERE product_id = ANY($1::int[]) ORDER BY product_id, display_order ASC', [productIds]) : { rows: [] },
-    categoryIdsForRows.length ? query('SELECT * FROM categories WHERE id = ANY($1::int[])', [categoryIdsForRows]) : { rows: [] },
-  ]);
-
-  const imageMap = new Map();
-  for (const image of imagesResult.rows) {
-    const key = Number(image.product_id);
-    if (!imageMap.has(key)) imageMap.set(key, []);
-    imageMap.get(key).push({ id: image.id, url: image.url, altText: image.alt_text, isPrimary: !!image.is_primary, displayOrder: image.display_order });
-  }
-
-  const attributeMap = new Map();
-  for (const attribute of attributesResult.rows) {
-    const key = Number(attribute.product_id);
-    if (!attributeMap.has(key)) attributeMap.set(key, []);
-    attributeMap.get(key).push({ id: attribute.id, label: attribute.name, value: attribute.unit ? `${attribute.value} ${attribute.unit}` : attribute.value, rawValue: attribute.value, unit: attribute.unit });
-  }
-
-  const categoryMap = new Map();
-  for (const category of categoriesResult.rows) {
-    categoryMap.set(Number(category.id), { id: category.id, name: category.name, slug: category.slug });
-  }
-
-  const data = productRows.map((product) => ({
-    ...product,
-    tags: product.tags ? product.tags.split(',').map((tag) => tag.trim()).filter(Boolean) : [],
-    images: (imageMap.get(Number(product.id)) || []).sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.displayOrder - b.displayOrder),
-    specifications: (attributeMap.get(Number(product.id)) || []).filter((attribute) => attribute.rawValue && String(attribute.rawValue).trim()),
-    category: categoryMap.get(Number(product.category_id)) || null,
-  }));
-
-  return { data, pagination: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) || 1 } };
-}
-
-export async function getProductBySlug(slug, { publishedOnly = true } = {}) { const result = await query(`SELECT * FROM products WHERE slug = $1${publishedOnly ? ' AND published = true' : ''}`, [slug]); return attachRelations(result.rows[0]); }
-export async function getProductById(id) { return attachRelations((await query('SELECT * FROM products WHERE id = $1', [id])).rows[0]); }
-export async function incrementViewCount(id) { await query('UPDATE products SET view_count = view_count + 1 WHERE id = $1', [id]); }
-
-export async function getRelatedProducts(product, limit = 6) {
-  const productTags = Array.isArray(product.tags) ? product.tags : (product.tags || '').split(',').map((tag) => tag.trim()).filter(Boolean);
-  const sameCategory = product.category_id ? (await query('SELECT * FROM products WHERE category_id = $1 AND id != $2 AND published = true ORDER BY display_order ASC LIMIT $3', [product.category_id, product.id, limit])).rows : [];
-  let results = await Promise.all(sameCategory.map(attachRelations));
-  const existingIds = new Set([product.id, ...results.map((item) => item.id)]);
-  if (results.length < limit && productTags.length) {
-    const candidates = (await query('SELECT * FROM products WHERE published = true')).rows;
-    for (const candidate of candidates) {
-      if (results.length >= limit) break;
-      if (existingIds.has(candidate.id)) continue;
-      const candidateTags = (candidate.tags || '').split(',').map((tag) => tag.trim());
-      if (candidateTags.some((tag) => productTags.includes(tag))) { results.push(await attachRelations(candidate)); existingIds.add(candidate.id); }
-    }
-  }
-  if (results.length < limit) {
-    const filler = (await query('SELECT * FROM products WHERE published = true ORDER BY display_order ASC')).rows.filter((candidate) => !existingIds.has(candidate.id)).slice(0, limit - results.length);
-    results = results.concat(await Promise.all(filler.map(attachRelations)));
-  }
-  return results.slice(0, limit);
-}
-
-export async function getFilterFacets({ categorySlug } = {}) {
-  let result;
-  if (categorySlug) { const category = (await query('SELECT id FROM categories WHERE slug = $1', [categorySlug])).rows[0]; const ids = category ? await getSubcategoryIds(category.id) : [-1]; result = await query('SELECT id FROM products WHERE category_id = ANY($1::int[]) AND published = true', [ids]); }
-  else result = await query('SELECT id FROM products WHERE published = true');
-  if (!result.rows.length) return {};
-  const attributes = await query('SELECT name, value FROM product_attributes WHERE product_id = ANY($1::int[])', [result.rows.map((row) => row.id)]);
-  const facets = {}; for (const row of attributes.rows) if (row.value) (facets[row.name] ||= new Set()).add(row.value);
-  return Object.fromEntries(Object.entries(facets).map(([key, set]) => [key, Array.from(set).sort()]));
-}
-
-export async function createProduct(data) {
-  const slug = await generateUniqueSlug(data.slug || data.name, slugExists);
-  const max = (await query('SELECT COALESCE(MAX(display_order), -1)::int AS count FROM products')).rows[0].count;
-  const result = await query('INSERT INTO products (category_id, name, slug, short_description, description, price_min, price_max, price_unit, moq_value, moq_unit, tags, published, featured, is_latest, display_order, seo_title, seo_description, og_image) VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17,$18) RETURNING *', [data.categoryId || null, data.name, slug, data.shortDescription || '', data.description || '', data.priceMin ?? null, data.priceMax ?? null, data.priceUnit || 'Meter', data.moqValue || '', data.moqUnit || 'Meter', Array.isArray(data.tags) ? data.tags.join(',') : data.tags || '', data.published !== false, !!data.featured, !!data.isLatest, data.displayOrder ?? max + 1, data.seoTitle || '', data.seoDescription || '', data.ogImage || '']);
-  const productId = result.rows[0].id;
-  if (Array.isArray(data.images)) await setProductImages(productId, data.images);
-  if (Array.isArray(data.specifications || data.attributes)) await setProductAttributes(productId, data.specifications || data.attributes);
-  return getProductById(productId);
-}
-
-export async function updateProduct(id, data) {
-  const existing = await getProductById(id); if (!existing) return null;
-  const slug = data.slug && data.slug !== existing.slug ? await generateUniqueSlug(data.slug, slugExists, id) : existing.slug;
-  await query('UPDATE products SET category_id=$1,name=$2,slug=$3,short_description=$4,description=$5,price_min=$6,price_max=$7,price_unit=$8,moq_value=$9,moq_unit=$10,tags=$11,published=$12,featured=$13,is_latest=$14,display_order=$15,seo_title=$16,seo_description=$17,og_image=$18,updated_at=CURRENT_TIMESTAMP WHERE id=$19', [data.categoryId ?? existing.category_id, data.name ?? existing.name, slug, data.shortDescription ?? existing.short_description, data.description ?? existing.description, data.priceMin ?? existing.price_min, data.priceMax ?? existing.price_max, data.priceUnit ?? existing.price_unit, data.moqValue ?? existing.moq_value, data.moqUnit ?? existing.moq_unit, data.tags !== undefined ? (Array.isArray(data.tags) ? data.tags.join(',') : data.tags) : existing.tags, data.published !== undefined ? !!data.published : !!existing.published, data.featured !== undefined ? !!data.featured : !!existing.featured, data.isLatest !== undefined ? !!data.isLatest : !!existing.is_latest, data.displayOrder ?? existing.display_order, data.seoTitle ?? existing.seo_title, data.seoDescription ?? existing.seo_description, data.ogImage ?? existing.og_image, id]);
-  if (Array.isArray(data.images)) await setProductImages(id, data.images);
-  if (Array.isArray(data.specifications || data.attributes)) await setProductAttributes(id, data.specifications || data.attributes);
-  return getProductById(id);
-}
-
-export async function deleteProduct(id) { await query('DELETE FROM products WHERE id = $1', [id]); return { success: true }; }
-export async function duplicateProduct(id) { const original = await getProductById(id); if (!original) return null; return createProduct({ categoryId: original.category_id, name: `${original.name} (Copy)`, shortDescription: original.short_description, description: original.description, priceMin: original.price_min, priceMax: original.price_max, priceUnit: original.price_unit, moqValue: original.moq_value, moqUnit: original.moq_unit, tags: original.tags, published: false, featured: false, isLatest: false, seoTitle: original.seo_title, seoDescription: original.seo_description, images: original.images, specifications: original.specifications.map((item) => ({ name: item.label, value: item.rawValue, unit: item.unit })) }); }
-export async function reorderProducts(orderedIds) { await withTransaction(async (client) => { for (const [index, id] of orderedIds.entries()) await client.query('UPDATE products SET display_order=$1 WHERE id=$2', [index, id]); }); }
-export async function setProductImages(productId, images) { await withTransaction(async (client) => { await client.query('DELETE FROM product_images WHERE product_id=$1', [productId]); for (const [index, image] of images.entries()) await client.query('INSERT INTO product_images (product_id,url,alt_text,display_order,is_primary) VALUES ($1,$2,$3,$4,$5)', [productId, image.url, image.altText || '', index, !!image.isPrimary || index === 0]); }); }
-export async function setProductAttributes(productId, attributes) { await withTransaction(async (client) => { await client.query('DELETE FROM product_attributes WHERE product_id=$1', [productId]); for (const [index, attribute] of attributes.entries()) { const name = attribute.name || attribute.label; const value = attribute.value ?? attribute.rawValue; if (name && value !== undefined && value !== null && String(value).trim()) await client.query('INSERT INTO product_attributes (product_id,name,value,unit,display_order) VALUES ($1,$2,$3,$4,$5)', [productId, name, String(value), attribute.unit || '', index]); } }); }
-export async function getDashboardStats() { const names = ['totalProducts','publishedProducts','featuredProducts','totalCategories','totalTestimonials','totalEnquiries','newEnquiries']; const sql = ['SELECT COUNT(*)::int AS c FROM products','SELECT COUNT(*)::int AS c FROM products WHERE published=true','SELECT COUNT(*)::int AS c FROM products WHERE featured=true','SELECT COUNT(*)::int AS c FROM categories','SELECT COUNT(*)::int AS c FROM testimonials','SELECT COUNT(*)::int AS c FROM enquiries',"SELECT COUNT(*)::int AS c FROM enquiries WHERE status='New'"]; const counts = await Promise.all(sql.map((statement) => query(statement))); const mostViewed = (await query('SELECT id,name,slug,view_count FROM products ORDER BY view_count DESC LIMIT 5')).rows; return { ...Object.fromEntries(names.map((name, index) => [name, counts[index].rows[0].c])), mostViewed }; }
+const products = () => collection('products');
+async function slugExists(slug, excludeId) { return !!(await (await products()).findOne({ slug, ...(excludeId ? { id: { $ne: excludeId } } : {}) })); }
+function output(product, category) { if (!product) return null; const images = (product.images || []).slice().sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.displayOrder - b.displayOrder); const specifications = (product.specifications || []).filter((a) => a.value && String(a.value).trim()); return { ...product, tags: Array.isArray(product.tags) ? product.tags : String(product.tags || '').split(',').map((tag) => tag.trim()).filter(Boolean), images, specifications, category: category ? { id: category.id, name: category.name, slug: category.slug } : null }; }
+async function attach(product) { const category = product?.category_id ? await (await collection('categories')).findOne({ id: product.category_id }) : null; return output(product, category); }
+export async function listProducts({ categoryId, categorySlug, search, featured, latest, published = true, sort = 'display_order', page = 1, limit = 24, tags } = {}) { const filter = {}; if (published !== 'all') filter.published = !!published; let categoryIds; if (categorySlug) { const category = await (await collection('categories')).findOne({ slug: categorySlug }); categoryIds = category ? await getSubcategoryIds(category.id) : [-1]; } else if (categoryId) categoryIds = await getSubcategoryIds(categoryId); if (categoryIds) filter.category_id = { $in: categoryIds }; if (featured) filter.featured = true; if (latest) filter.is_latest = true; if (search?.trim()) { const regex = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'); filter.$or = [{ name: regex }, { description: regex }, { short_description: regex }, { tags: regex }, { 'specifications.name': regex }, { 'specifications.value': regex }]; } if (tags) filter.tags = { $regex: (Array.isArray(tags) ? tags : [tags]).map((tag) => tag.trim()).join('|'), $options: 'i' }; const ordering = { display_order: { display_order: 1, name: 1 }, 'name-asc': { name: 1 }, 'name-desc': { name: -1 }, newest: { created_at: -1 }, 'price-asc': { price_min: 1 }, 'price-desc': { price_max: -1 }, featured: { featured: -1, display_order: 1 } }[sort] || { display_order: 1, name: 1 }; const total = await (await products()).countDocuments(filter); const rows = await (await products()).find(filter).sort(ordering).skip((Math.max(1, Number(page)) - 1) * Number(limit)).limit(Number(limit)).toArray(); return { data: await Promise.all(rows.map(attach)), pagination: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) || 1 } }; }
+export async function getProductBySlug(slug, { publishedOnly = true } = {}) { return attach(await (await products()).findOne({ slug, ...(publishedOnly ? { published: true } : {}) })); }
+export async function getProductById(id) { return attach(await (await products()).findOne({ id })); }
+export async function incrementViewCount(id) { await (await products()).updateOne({ id }, { $inc: { view_count: 1 } }); }
+export async function getRelatedProducts(product, limit = 6) { const filter = { id: { $ne: product.id }, published: true }; if (product.category_id) filter.category_id = product.category_id; const same = await (await products()).find(filter).sort({ display_order: 1 }).limit(limit).toArray(); return Promise.all(same.map(attach)); }
+export async function getFilterFacets({ categorySlug } = {}) { const options = categorySlug ? { categorySlug } : {}; const result = await listProducts({ ...options, limit: 10000 }); const facets = {}; for (const product of result.data) for (const row of product.specifications || []) (facets[row.label] ||= new Set()).add(row.rawValue || row.value); return Object.fromEntries(Object.entries(facets).map(([key, value]) => [key, [...value].sort()])); }
+function fields(data, existing = {}) { return { category_id: data.categoryId ?? existing.category_id ?? null, name: data.name ?? existing.name, short_description: data.shortDescription ?? existing.short_description ?? '', description: data.description ?? existing.description ?? '', price_min: data.priceMin ?? existing.price_min ?? null, price_max: data.priceMax ?? existing.price_max ?? null, price_unit: data.priceUnit ?? existing.price_unit ?? 'Meter', moq_value: data.moqValue ?? existing.moq_value ?? '', moq_unit: data.moqUnit ?? existing.moq_unit ?? 'Meter', tags: Array.isArray(data.tags) ? data.tags.join(',') : data.tags ?? existing.tags ?? '', published: data.published !== undefined ? !!data.published : existing.published !== false, featured: data.featured !== undefined ? !!data.featured : !!existing.featured, is_latest: data.isLatest !== undefined ? !!data.isLatest : !!existing.is_latest, display_order: data.displayOrder ?? existing.display_order ?? 0, seo_title: data.seoTitle ?? existing.seo_title ?? '', seo_description: data.seoDescription ?? existing.seo_description ?? '', og_image: data.ogImage ?? existing.og_image ?? '' }; }
+function normalizeImages(images = []) { return images.map((image, index) => ({ id: image.id || `${Date.now()}-${index}`, url: image.url, altText: image.altText || '', isPrimary: !!image.isPrimary || index === 0, displayOrder: index })); }
+function normalizeSpecs(attributes = []) { return attributes.map((attribute, index) => ({ id: attribute.id || `${Date.now()}-${index}`, label: attribute.label || attribute.name, rawValue: attribute.rawValue ?? attribute.value, value: attribute.value ?? attribute.rawValue, unit: attribute.unit || '', displayOrder: index })).filter((attribute) => attribute.label && attribute.value !== undefined && String(attribute.value).trim()); }
+export async function createProduct(data) { const product = { id: await nextId('products'), slug: await generateUniqueSlug(data.slug || data.name, slugExists), ...fields(data), images: normalizeImages(data.images), specifications: normalizeSpecs(data.specifications || data.attributes), view_count: 0, created_at: new Date(), updated_at: new Date() }; await (await products()).insertOne(product); return getProductById(product.id); }
+export async function updateProduct(id, data) { const existing = await (await products()).findOne({ id }); if (!existing) return null; const updated = { ...existing, ...fields(data, existing), slug: data.slug && data.slug !== existing.slug ? await generateUniqueSlug(data.slug, slugExists, id) : existing.slug, images: Array.isArray(data.images) ? normalizeImages(data.images) : existing.images, specifications: Array.isArray(data.specifications || data.attributes) ? normalizeSpecs(data.specifications || data.attributes) : existing.specifications, updated_at: new Date() }; await (await products()).replaceOne({ id }, updated); return getProductById(id); }
+export async function deleteProduct(id) { await (await products()).deleteOne({ id }); return { success: true }; }
+export async function duplicateProduct(id) { const original = await getProductById(id); if (!original) return null; return createProduct({ ...original, categoryId: original.category_id, name: `${original.name} (Copy)`, published: false, featured: false, isLatest: false, tags: original.tags, specifications: original.specifications }); }
+export async function reorderProducts(orderedIds) { const store = await products(); await Promise.all(orderedIds.map((id, index) => store.updateOne({ id }, { $set: { display_order: index } }))); }
+export async function setProductImages(productId, images) { await (await products()).updateOne({ id: productId }, { $set: { images: normalizeImages(images), updated_at: new Date() } }); }
+export async function setProductAttributes(productId, attributes) { await (await products()).updateOne({ id: productId }, { $set: { specifications: normalizeSpecs(attributes), updated_at: new Date() } }); }
+export async function getDashboardStats() { const store = await products(); const [totalProducts, publishedProducts, featuredProducts, totalCategories, totalTestimonials, totalEnquiries, newEnquiries, mostViewed] = await Promise.all([store.countDocuments(), store.countDocuments({ published: true }), store.countDocuments({ featured: true }), (await collection('categories')).countDocuments(), (await collection('testimonials')).countDocuments(), (await collection('enquiries')).countDocuments(), (await collection('enquiries')).countDocuments({ status: 'New' }), store.find({}, { projection: { id: 1, name: 1, slug: 1, view_count: 1 } }).sort({ view_count: -1 }).limit(5).toArray()]); return { totalProducts, publishedProducts, featuredProducts, totalCategories, totalTestimonials, totalEnquiries, newEnquiries, mostViewed }; }

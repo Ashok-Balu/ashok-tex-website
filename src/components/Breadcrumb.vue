@@ -1,5 +1,5 @@
 <template>
-  <nav class="flex items-center text-sm text-ink-500" aria-label="Breadcrumb">
+  <nav class="flex items-center text-xs sm:text-sm text-ink-500" aria-label="Breadcrumb">
     <ol class="flex items-center flex-wrap gap-1.5">
       <li class="flex items-center">
         <router-link to="/" class="hover:text-ink-900 transition-colors font-medium">Home</router-link>

@@ -98,7 +98,7 @@ const routes = [
     component: ContactView,
     meta: {
       title: 'Contact Ashok Tex | Textile Fabric Manufacturer in Karur',
-      description: 'Contact Ashok Tex in Karur, Tamil Nadu. Phone: +91 7904154775. Email: arvinthas4@gmail.com.',
+      description: 'Contact Ashok Tex in Karur, Tamil Nadu. Phone: +91 7904154775. Email: ashoktex.info@gmail.com.',
     },
   },
   {

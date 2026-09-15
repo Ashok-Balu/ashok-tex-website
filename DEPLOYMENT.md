@@ -1,34 +1,31 @@
-Check `/api/health`, the home page, product/category pages, admin login, CRUD operations, and an image upload after deployment. Confirm successful admin writes create rows in `audit_log` without storing passwords or uploaded file contents.
 # Ashok Tex production deployment
 
-## 1. Supabase
+## 1. MongoDB Atlas
 
-Create a Supabase project, open SQL Editor, and run `server/db/schema.sql`. Create a public Storage bucket named `uploads` (or use another name in `SUPABASE_STORAGE_BUCKET`). Restrict uploads to authenticated server operations by leaving the bucket policies closed to anonymous writes; the server uses the service-role key and never sends it to the browser. Public reads are appropriate for the current product image URLs. Use signed URLs instead if the bucket must be private.
+Create the MongoDB Atlas cluster named `ashoktex` and a database user. Add the deployment server IP to the Atlas Network Access list, then set `MONGODB_URI` and `MONGODB_DATABASE=ashoktex_prod`. The API creates the required collections and indexes on first connection.
 
-The schema currently contains the application’s actual entities: categories, products, product images, product attributes, testimonials, enquiries, contacts, company settings, navigation items, homepage sections, admin users, and audit log. There are no orders, customer accounts, variants, addresses, or subcategories as separate tables in this codebase; subcategories are represented by `categories.parent_id`.
+The application stores categories, products, testimonials, enquiries, contacts, company settings, navigation, homepage sections, admin users, audit logs, and visitor analytics in MongoDB. Product images and specifications are embedded in product documents.
 
-## 2. Migrate the existing database
+## 2. Cloudinary
 
-Keep `data-storage/ashoktex.db` as the source backup. Copy `.env.example` to `.env`, set `DATABASE_URL`, then run:
+Create a Cloudinary account and set `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, and `CLOUDINARY_API_SECRET`. Admin image uploads are sent to the `CLOUDINARY_FOLDER` folder and the returned secure URL is stored in MongoDB. Keep the API secret server-only; never prefix it with `VITE_`.
 
-```text
-npm run migrate:sqlite
-```
-
-The script reads the existing SQLite schema/data, applies the PostgreSQL schema, preserves integer IDs, converts SQLite flags to booleans, and skips existing rows with the same primary key. Take a Supabase backup before rerunning against a populated production database. Verify counts in Supabase for each table and manually verify representative category/product relationships and image URLs.
+After MongoDB and Cloudinary are configured, run `npm run migrate:cloudinary` once to move existing product, category, testimonial, and company gallery URLs into Cloudinary. The migration skips URLs already hosted by Cloudinary and is safe to rerun.
 
 ## 3. Environment variables
 
-Set these in Vercel for Development, Preview, and Production as appropriate:
+Set these in local `.env.production` and in Vercel for Development, Preview, and Production:
 
-`DATABASE_URL`, `DATABASE_SSL`, `DATABASE_POOL_MAX`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY`, `SUPABASE_STORAGE_BUCKET`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `JWT_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `SITE_URL`, `VITE_API_BASE_URL`, and the existing SMTP variables when email notifications are required. The publishable key is browser-safe; the secret key is server-only and must never be prefixed with `VITE_`. The current frontend uses the API for data access, so the VITE Supabase values are ready for future browser-side Supabase features but are not required by existing API calls.
+`MONGODB_URI`, `MONGODB_DATABASE`, `MONGODB_POOL_MAX`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `CLOUDINARY_FOLDER`, `JWT_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `SITE_URL`, `VITE_API_BASE_URL`, and the existing SMTP variables when email notifications are required.
+
+The MongoDB credentials supplied for local development are already in `.env.local`, which is ignored by Git. Rotate any credentials that may have been exposed in chat, logs, or a committed file.
 
 ## 4. Local and Vercel deployment
 
-Run `npm run dev:all` locally after setting the environment. The Express API is exposed by `api/index.js`; Vercel uses `vercel.json` to route `/api/*` and `/sitemap.xml` to it. Import the GitHub repository into Vercel, set the environment variables, and deploy. The Vite build remains the existing frontend build and the API uses a bounded PostgreSQL pool suitable for serverless requests. No production data or uploaded media is written to the Vercel filesystem.
+Run `npm run dev:all` after setting the environment. The Express API is exposed by `api/index.js`; Vercel routes `/api/*` and `/sitemap.xml` to it. No production data or uploaded media is written to the Vercel filesystem.
 
-## 5. Domain and operations
+Check `/api/health`, the home page, product/category pages, admin login, CRUD operations, visitor analytics, and an image upload after deployment. Confirm that Atlas Network Access allows the deployed server to connect.
 
-In Vercel, add the GoDaddy or Hostinger domain and copy the displayed DNS records. At the registrar, add the Vercel A record for the apex domain and CNAME for `www` exactly as Vercel specifies, then wait for DNS/TLS verification. Check `/api/health`, the home page, product/category pages, admin login, CRUD operations, and an image upload after deployment.
+## 5. Backups and migration
 
-Enable Supabase daily backups and point-in-time recovery on the paid production plan, and perform a test restore before launch. A backup strategy is not verified until a restore has been tested. Keep `ashoktex.db` archived until the migration is verified. Store future schema changes as reviewed SQL migrations and apply them in Supabase before deploying code that depends on them. Storage objects are separate from database backups, so periodically export or copy the `uploads` bucket as part of the media backup process and verify that representative image URLs still work after restore.
+Use `mongodump`/`mongorestore` or Atlas backups for MongoDB. Cloudinary assets are separate from MongoDB backups, so retain Cloudinary's asset backup/versioning or periodically export the media library. Existing SQLite/PostgreSQL migration scripts are not part of the MongoDB runtime; import legacy data into the collections before production launch and verify product, category, and image counts.

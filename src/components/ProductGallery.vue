@@ -13,6 +13,7 @@
         class="w-full h-full object-cover transition-transform duration-200"
         :style="zoomStyle"
         loading="eager"
+        decoding="async"
       />
       <div class="absolute bottom-3 right-3 px-3 py-1.5 bg-ink-900/70 backdrop-blur-sm text-white text-xs font-medium rounded-lg opacity-70 group-hover:opacity-100 transition-opacity flex items-center gap-1.5">
         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7"/></svg>
@@ -32,7 +33,7 @@
         :class="['aspect-square rounded-xl overflow-hidden border-2 transition-all', activeIndex === idx ? 'border-brand-500 ring-2 ring-brand-200' : 'border-transparent opacity-60 hover:opacity-100']"
         @click="activeIndex = idx"
       >
-        <img :src="img" :alt="`View ${idx + 1}`" class="w-full h-full object-cover" />
+        <img :src="optimizeImageUrl(img, { width: 320 })" :alt="`View ${idx + 1}`" class="w-full h-full object-cover" loading="lazy" decoding="async" />
       </button>
     </div>
 
@@ -49,7 +50,7 @@
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
         </button>
         <div class="max-w-4xl max-h-[90vh] rounded-2xl overflow-hidden">
-          <img :src="currentImage" :alt="altText" class="max-w-full max-h-[85vh] object-contain rounded-2xl" />
+          <img :src="optimizeImageUrl(currentImage, { width: 1800 })" :alt="altText" class="max-w-full max-h-[85vh] object-contain rounded-2xl" decoding="async" />
         </div>
       </div>
     </Teleport>
@@ -58,6 +59,7 @@
 
 <script setup>
 import { ref, computed } from 'vue';
+import { optimizeImageUrl } from '../services/api';
 
 const props = defineProps({
   images: { type: Array, required: true },
@@ -74,7 +76,7 @@ const normalizedImages = computed(() =>
   (Array.isArray(props.images) ? props.images.map((image) => (typeof image === 'string' ? image : image?.url || image?.src || '')).filter(Boolean) : []),
 );
 
-const currentImage = computed(() => normalizedImages.value[activeIndex.value] || normalizedImages.value[0] || '');
+const currentImage = computed(() => optimizeImageUrl(normalizedImages.value[activeIndex.value] || normalizedImages.value[0] || '', { width: 1400 }));
 
 const handleMouseMove = (e) => {
   const rect = e.currentTarget.getBoundingClientRect();

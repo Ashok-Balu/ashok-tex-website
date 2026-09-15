@@ -1,59 +1,66 @@
-import pg from 'pg';
 import dotenv from 'dotenv';
+import dns from 'node:dns';
+import { MongoClient } from 'mongodb';
 
 dotenv.config();
 
-const { Pool } = pg;
-
-if (!process.env.DATABASE_URL) {
-  throw new Error('DATABASE_URL is required. Copy .env.example to .env and set the Supabase connection string before running npm run server.');
+if (!process.env.MONGODB_URI) {
+  throw new Error('MONGODB_URI is required. Copy .env.example to .env and set your MongoDB connection string.');
 }
 
-export const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: Number(process.env.DATABASE_POOL_MAX || 10),
-  min: 2,
-  idleTimeoutMillis: 5000,
-  connectionTimeoutMillis: 5000,
-  ssl: process.env.DATABASE_SSL === 'false' ? false : { rejectUnauthorized: false },
-  statement_timeout: 30000,
-});
-
-pool.on('error', (error) => {
-  console.error('[Database Pool Error]', error.message, error.stack);
-});
-
-pool.on('connect', () => {
-  console.log('[Database] Connected to PostgreSQL');
-});
-
-export async function query(text, values = []) {
-  return pool.query(text, values);
+if (process.env.MONGODB_DNS_SERVERS) {
+  dns.setServers(process.env.MONGODB_DNS_SERVERS.split(',').map((server) => server.trim()).filter(Boolean));
 }
 
-export async function withTransaction(callback) {
-  const client = await pool.connect();
-  try {
-    await client.query('BEGIN');
-    const result = await callback(client);
-    await client.query('COMMIT');
-    return result;
-  } catch (error) {
-    await client.query('ROLLBACK');
-    throw error;
-  } finally {
-    client.release();
+const client = new MongoClient(process.env.MONGODB_URI, {
+  maxPoolSize: Number(process.env.MONGODB_POOL_MAX || 10),
+});
+
+let database;
+let databasePromise;
+
+export async function getDatabase() {
+  if (database) return database;
+  if (!databasePromise) {
+    databasePromise = (async () => {
+      await client.connect();
+      const connectedDatabase = client.db(process.env.MONGODB_DATABASE || undefined);
+      await Promise.all([
+        connectedDatabase.collection('categories').createIndex({ slug: 1 }, { unique: true }),
+        connectedDatabase.collection('products').createIndex({ slug: 1 }, { unique: true }),
+        connectedDatabase.collection('admin_users').createIndex({ username: 1 }, { unique: true }),
+        connectedDatabase.collection('website_visits').createIndex({ session_id: 1, path: 1, visited_date: 1 }, { unique: true }),
+      ]);
+      database = connectedDatabase;
+      console.log(`[Database] Connected to MongoDB (${database.databaseName})`);
+      return database;
+    })().catch((error) => {
+      databasePromise = undefined;
+      throw error;
+    });
   }
+  return databasePromise;
+}
+
+export async function collection(name) {
+  return (await getDatabase()).collection(name);
+}
+
+export async function nextId(name) {
+  const counters = await collection('_counters');
+  const result = await counters.findOneAndUpdate(
+    { _id: name },
+    { $inc: { value: 1 } },
+    { upsert: true, returnDocument: 'after' },
+  );
+  const document = result?.value && typeof result.value === 'object' ? result.value : result;
+  return document?.value;
 }
 
 export async function closeDatabase() {
-  await pool.end();
+  await client.close();
+  database = undefined;
+  databasePromise = undefined;
 }
 
-export default pool;
-
-/*
- * The canonical schema lives in server/db/schema.sql and is applied through
- * Supabase migrations. Keeping schema DDL out of the request path prevents a
- * Vercel function from trying to mutate the database on every cold start.
- */
+export default getDatabase;

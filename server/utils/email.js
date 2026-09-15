@@ -44,7 +44,7 @@ function renderHtmlBox(heading, rows) {
 }
 
 export async function sendEnquiryNotification(enquiry) {
-  const recipient = process.env.NOTIFICATION_EMAIL || 'arvinthas4@gmail.com';
+  const recipient = process.env.NOTIFICATION_EMAIL || 'ashoktex.info@gmail.com';
   const textBody = `
 New B2B Fabric Quote Enquiry Received from ashoktex.in:
 
@@ -103,7 +103,7 @@ Status: NEW
 }
 
 export async function sendContactNotification(message) {
-  const recipient = process.env.NOTIFICATION_EMAIL || 'arvinthas4@gmail.com';
+  const recipient = process.env.NOTIFICATION_EMAIL || 'ashoktex.info@gmail.com';
   const textBody = `
 New Contact Message Received from ashoktex.in:
 

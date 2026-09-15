@@ -55,11 +55,13 @@ export default {
         'slide-up': 'slideUp 0.6s ease-out both',
         'slide-in': 'slideIn 0.4s ease-out both',
         'pulse-slow': 'pulse 3s ease-in-out infinite',
+        'loading-bar': 'loadingBar 1.15s ease-in-out infinite',
       },
       keyframes: {
         fadeIn:  { '0%': { opacity: '0' }, '100%': { opacity: '1' } },
         slideUp: { '0%': { transform: 'translateY(24px)', opacity: '0' }, '100%': { transform: 'translateY(0)', opacity: '1' } },
         slideIn: { '0%': { transform: 'translateX(-20px)', opacity: '0' }, '100%': { transform: 'translateX(0)', opacity: '1' } },
+        loadingBar: { '0%': { transform: 'translateX(-120%)' }, '100%': { transform: 'translateX(360%)' } },
       },
     },
   },

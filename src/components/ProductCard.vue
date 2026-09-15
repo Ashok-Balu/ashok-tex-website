@@ -5,10 +5,11 @@
     <div class="relative aspect-[4/3] overflow-hidden bg-surface-100">
       <router-link :to="`/products/${product.slug}`" class="block w-full h-full">
         <img
-          :src="product.images?.[0]?.url || product.images?.[0] || ''"
+          :src="imageUrl"
           :alt="product.name"
           class="w-full h-full object-cover object-center group-hover:scale-105 transition-transform duration-500 ease-out"
           loading="lazy"
+          decoding="async"
         />
         <div class="absolute inset-0 bg-ink-900/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
           <span class="px-4 py-2 bg-white text-ink-900 text-xs font-semibold rounded-xl shadow-lg">View Details</span>
@@ -58,5 +59,9 @@
 </template>
 
 <script setup>
-defineProps({ product: { type: Object, required: true } });
+import { computed } from 'vue';
+import { optimizeImageUrl } from '../services/api';
+
+const props = defineProps({ product: { type: Object, required: true } });
+const imageUrl = computed(() => optimizeImageUrl(props.product.images?.[0], { width: 900 }));
 </script>

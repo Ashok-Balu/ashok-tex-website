@@ -1,36 +1,24 @@
 import bcrypt from 'bcryptjs';
-import { query } from '../database.js';
+import { collection, nextId } from './mongoHelpers.js';
 
-export async function getAdminByUsername(username) {
-  return (await query('SELECT * FROM admin_users WHERE username = $1', [username])).rows[0];
-}
-
+export async function getAdminByUsername(username) { return (await collection('admin_users')).findOne({ username }); }
 export async function createAdminUser(username, password, role = 'super_admin') {
   const passwordHash = await bcrypt.hash(password, 10);
-  return (await query('INSERT INTO admin_users (username, password_hash, role) VALUES ($1, $2, $3) RETURNING id, username, role', [username, passwordHash, role])).rows[0];
+  const user = { id: await nextId('admin_users'), username, password_hash: passwordHash, role, created_at: new Date() };
+  await (await collection('admin_users')).insertOne(user);
+  const { password_hash, ...safeUser } = user;
+  return safeUser;
 }
-
 export async function updateAdminPassword(username, password) {
   const passwordHash = await bcrypt.hash(password, 10);
-  await query('UPDATE admin_users SET password_hash = $1 WHERE username = $2', [passwordHash, username]);
+  await (await collection('admin_users')).updateOne({ username }, { $set: { password_hash: passwordHash } });
   return getAdminByUsername(username);
 }
-
 export async function verifyAdminPassword(username, password) {
-  try {
-    const user = await getAdminByUsername(username);
-    if (!user) {
-      console.warn('Admin user not found:', username);
-      return null;
-    }
-    const valid = await bcrypt.compare(password, user.password_hash);
-    return valid ? { id: user.id, username: user.username, role: user.role } : null;
-  } catch (error) {
-    console.error('Error verifying admin password:', error.message);
-    throw error;
-  }
+  const user = await getAdminByUsername(username);
+  if (!user) return null;
+  return (await bcrypt.compare(password, user.password_hash)) ? { id: user.id, username: user.username, role: user.role } : null;
 }
-
 export async function recordAudit({ username, action, entity, entityId, oldValue, newValue }) {
-  await query('INSERT INTO audit_log (username, action, entity, entity_id, old_value, new_value) VALUES ($1, $2, $3, $4, $5::jsonb, $6::jsonb)', [username, action, entity, String(entityId ?? ''), oldValue ? JSON.stringify(oldValue) : null, newValue ? JSON.stringify(newValue) : null]);
+  await (await collection('audit_log')).insertOne({ id: await nextId('audit_log'), username: username || null, action, entity, entity_id: String(entityId ?? ''), old_value: oldValue || null, new_value: newValue || null, created_at: new Date() });
 }

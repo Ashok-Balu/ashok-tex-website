@@ -32,6 +32,15 @@ function normalizeImageValue(image) {
   return '';
 }
 
+export function optimizeImageUrl(value, { width = 1200, quality = 'auto' } = {}) {
+  const url = normalizeImageValue(value);
+  if (!url || !url.includes('res.cloudinary.com')) return url;
+  const marker = '/image/upload/';
+  if (!url.includes(marker)) return url;
+  const transforms = `f_auto,q_${quality},w_${width},c_limit`;
+  return url.replace(marker, `${marker}${transforms}/`);
+}
+
 function normalizeProduct(product) {
   if (!product || typeof product !== 'object') return product;
   const images = Array.isArray(product.images) ? product.images.map(normalizeImageValue).filter(Boolean) : [];

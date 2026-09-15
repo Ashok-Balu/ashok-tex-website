@@ -1,11 +1,11 @@
 import bcrypt from 'bcryptjs';
-import { query, withTransaction } from './database.js';
+import { collection } from './database.js';
 import { createCategory, getAllCategories } from './repositories/categoryRepo.js';
 import { createProduct } from './repositories/productRepo.js';
 import { createTestimonial, getAllTestimonials } from './repositories/testimonialRepo.js';
 import { updateCompanySettings, getCompanySettings } from './repositories/settingsRepo.js';
 import { createNavigationItem, getAllNavigationItems } from './repositories/settingsRepo.js';
-import { createAdminUser, getAdminByUsername } from './repositories/adminRepo.js';
+import { createAdminUser, getAdminByUsername, updateAdminPassword } from './repositories/adminRepo.js';
 
 import { collections } from '../../src/data/collections.js';
 import { products } from '../../src/data/products.js';
@@ -66,13 +66,14 @@ async function ensureRequestQuoteNavItem() {
 // moq_value already included the unit (e.g. "2,500 Meter") producing "2,500 Meter Meter".
 // Safe to run on every startup — it only touches rows that still have the duplicated unit.
 async function normalizeProductMoq() {
-  const rows = (await query("SELECT id, moq_value, moq_unit FROM products WHERE moq_unit != '' AND LOWER(moq_value) LIKE '%' || LOWER(moq_unit)")).rows;
-  if (!rows.length) return;
-  for (const row of rows) {
+  const rows = await (await collection('products')).find({ moq_unit: { $ne: '' } }).toArray();
+  const matchingRows = rows.filter((row) => String(row.moq_value || '').toLowerCase().endsWith(String(row.moq_unit || '').toLowerCase()));
+  if (!matchingRows.length) return;
+  for (const row of matchingRows) {
     const cleaned = row.moq_value.slice(0, row.moq_value.length - row.moq_unit.length).trim();
-    await query('UPDATE products SET moq_value = $1 WHERE id = $2', [cleaned, row.id]);
+    await (await collection('products')).updateOne({ id: row.id }, { $set: { moq_value: cleaned } });
   }
-  console.log(`[Seed] Normalized MOQ value on ${rows.length} product(s).`);
+  console.log(`[Seed] Normalized MOQ value on ${matchingRows.length} product(s).`);
 }
 
 async function seedCategoriesAndProducts() {
@@ -182,32 +183,35 @@ async function seedNavigation() {
 }
 
 async function seedHomepageSections() {
-  const existing = (await query('SELECT COUNT(*)::int AS c FROM homepage_sections')).rows[0].c;
-  if (existing > 0) return;
-  await withTransaction(async (client) => {
-    for (const s of HOMEPAGE_SECTION_DEFAULTS) await client.query('INSERT INTO homepage_sections (section_key, title, subtitle, content, enabled, display_order) VALUES ($1, $2, $3, $4::jsonb, true, $5)', [s.section_key, s.title, s.subtitle, '{}', s.display_order]);
-  });
+  const store = await collection('homepage_sections');
+  if (await store.countDocuments() > 0) return;
+  await store.insertMany(HOMEPAGE_SECTION_DEFAULTS.map((s) => ({ ...s, content: {}, enabled: true })));
   console.log(`[Seed] Created ${HOMEPAGE_SECTION_DEFAULTS.length} homepage sections.`);
 }
 
 async function seedAdminUser() {
-  const username = process.env.ADMIN_USERNAME;
-  const password = process.env.ADMIN_PASSWORD;
-  if (!username || !password || username.includes('YOUR_') || password.includes('YOUR_') || password === 'change-me') {
-    console.warn('[Seed] Skipped admin user: configure a strong ADMIN_USERNAME and ADMIN_PASSWORD.');
+  const configuredUsers = [
+    { username: process.env.ADMIN_USERNAME, password: process.env.ADMIN_PASSWORD },
+    { username: process.env.ADMIN_USERNAME_2, password: process.env.ADMIN_PASSWORD_2 },
+  ].filter(({ username, password }) => username && password && !username.includes('YOUR_') && !password.includes('YOUR_') && password !== 'change-me');
+
+  if (!configuredUsers.length) {
+    console.warn('[Seed] Skipped admin users: configure ADMIN_USERNAME/ADMIN_PASSWORD.');
     return;
   }
 
-  const existingUser = await getAdminByUsername(username);
-  if (existingUser) {
-    const passwordMatches = await bcrypt.compare(password, existingUser.password_hash);
-    if (!passwordMatches) {
-      await updateAdminPassword(username, password);
-      console.log(`[Seed] Updated admin password for "${username}" to match ADMIN_PASSWORD.`);
+  for (const { username, password } of configuredUsers) {
+    const existingUser = await getAdminByUsername(username);
+    if (existingUser) {
+      const passwordMatches = await bcrypt.compare(password, existingUser.password_hash);
+      if (!passwordMatches) {
+        await updateAdminPassword(username, password);
+        console.log(`[Seed] Updated admin password for "${username}".`);
+      }
+      continue;
     }
-    return;
-  }
 
-  await createAdminUser(username, password);
-  console.log(`[Seed] Created default admin user "${username}". Set ADMIN_USERNAME/ADMIN_PASSWORD env vars to customize.`);
+    await createAdminUser(username, password);
+    console.log(`[Seed] Created admin user "${username}".`);
+  }
 }

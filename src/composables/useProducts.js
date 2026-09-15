@@ -17,28 +17,36 @@ export function useProductList(paramsRef) {
   const loading = ref(true);
   const error = ref(null);
   let lastRequestKey = '';
+  let requestSequence = 0;
 
   async function fetchList() {
     const params = toValue(paramsRef) ?? {};
     const requestKey = JSON.stringify(params);
     if (requestKey === lastRequestKey && products.value.length) return;
     lastRequestKey = requestKey;
+    const currentRequest = ++requestSequence;
 
     loading.value = true;
     error.value = null;
     try {
       const res = await api.products.list(params);
+      if (currentRequest !== requestSequence) return;
       products.value = Array.isArray(res.data) ? res.data.map(normalizeProduct) : [];
       pagination.value = res.pagination;
     } catch (e) {
+      if (currentRequest !== requestSequence) return;
       error.value = e.message;
       products.value = [];
     } finally {
-      loading.value = false;
+      if (currentRequest === requestSequence) loading.value = false;
     }
   }
 
-  watch(() => JSON.stringify(toValue(paramsRef) ?? {}), fetchList, { immediate: true });
+  let debounceTimer;
+  watch(() => JSON.stringify(toValue(paramsRef) ?? {}), () => {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(fetchList, 180);
+  }, { immediate: true });
 
   return { products, pagination, loading, error, refetch: fetchList };
 }

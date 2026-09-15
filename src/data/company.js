@@ -19,7 +19,7 @@ export const companyInfo = {
   phoneRaw: "+917904154775",
   phoneSecondary: "+91 99433 45614",
   phoneSecondaryRaw: "+919943345614",
-  email: "arvinthas4@gmail.com",
+  email: "ashoktex.info@gmail.com",
   website: "https://www.ashoktex.in",
   whatsappNumber: "917904154775",
   whatsappUrl: "https://wa.me/917904154775",
