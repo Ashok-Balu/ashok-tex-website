@@ -35,7 +35,7 @@ router.put('/company', async (req, res) => {
   try {
     const phoneFields = ['phone', 'phoneRaw', 'phoneSecondary', 'phoneSecondaryRaw', 'whatsappNumber'];
     const invalidPhone = phoneFields.find((field) => req.body[field] && !validatePhone(String(req.body[field])));
-    if (invalidPhone) return res.status(400).json({ success: false, message: `${invalidPhone} must contain exactly 10 digits.` });
+    if (invalidPhone) return res.status(400).json({ success: false, message: `${invalidPhone} must be a valid Indian mobile number (with or without +91).` });
     const startTime = Date.now();
     const data = await updateCompanySettings(req.body);
     settingsCache = { data: null, timestamp: 0 };

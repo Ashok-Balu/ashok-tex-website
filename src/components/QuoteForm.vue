@@ -10,15 +10,45 @@
 
     <div class="p-5 sm:p-8">
       <!-- Success -->
-      <div v-if="status === 'success'" class="p-6 bg-green-50 border border-green-200 rounded-2xl mb-6 animate-fade-in" role="alert">
-        <div class="flex items-start gap-3">
-          <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      <div v-if="status === 'success'" class="mb-6 overflow-hidden rounded-[28px] border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-lime-50 shadow-[0_18px_45px_rgba(16,185,129,0.12)] animate-fade-in" role="alert">
+        <div class="p-5 sm:p-6">
+          <div class="flex items-start gap-3 sm:gap-4">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 shadow-lg shadow-emerald-500/20">
+              <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="mb-2 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Quotation Sent</div>
+              <h3 class="font-display text-2xl font-bold text-emerald-900">Enquiry Received!</h3>
+              <p class="mt-2 text-sm leading-6 text-emerald-800 sm:text-[15px]">
+                Thank you. Our team will contact you shortly with the best pricing and fabric availability for your requirement.
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 class="font-semibold text-green-900 mb-1">Enquiry Received!</h3>
-            <p class="text-sm text-green-700">Thank you. Our team will contact you shortly. You can also reach us at <a href="tel:+917904154775" class="underline font-semibold">+91 7904154775</a>.</p>
-            <button type="button" class="mt-3 text-xs font-semibold text-green-800 underline hover:text-green-600" @click="resetForm">Submit another inquiry →</button>
+
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl border border-emerald-200 bg-white/80 p-3">
+              <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-600">Need a faster response?</p>
+              <a href="tel:+917904154775" class="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 hover:text-emerald-700">
+                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">☎</span>
+                +91 79041 54775
+              </a>
+            </div>
+            <div class="rounded-2xl border border-emerald-200 bg-white/80 p-3">
+              <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-600">Preferred channel</p>
+              <a href="https://wa.me/917904154775?text=Hello%20Ashok%20Tex%2C%20I%20want%20to%20follow%20up%20on%20my%20quote%20request." target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 hover:text-emerald-700">
+                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">✦</span>
+                WhatsApp Us
+              </a>
+            </div>
+          </div>
+
+          <div class="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <button type="button" class="inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700" @click="resetForm">
+              Submit another inquiry
+            </button>
+            <a href="/products" class="inline-flex items-center justify-center rounded-xl border border-emerald-200 bg-white px-4 py-2.5 text-sm font-semibold text-emerald-800 transition hover:border-emerald-300 hover:bg-emerald-50">
+              Browse fabric collections
+            </a>
           </div>
         </div>
       </div>
@@ -28,7 +58,7 @@
         <p class="text-sm text-red-700 font-medium">{{ errorMessage || 'Something went wrong. Please try again or contact us directly.' }}</p>
       </div>
 
-      <form v-if="status !== 'success'" @submit.prevent="handleSubmit" novalidate class="space-y-5">
+      <v-form v-if="status !== 'success'" @submit.prevent="handleSubmit" novalidate class="space-y-5">
         <!-- Honeypot -->
         <div class="hidden" aria-hidden="true">
           <input v-model="form.honeypot" type="text" tabindex="-1" autocomplete="off" />
@@ -54,7 +84,7 @@
           </div>
           <div>
             <label for="phone" class="block text-sm font-medium text-ink-700 mb-1.5">Phone / WhatsApp <span class="text-red-500">*</span></label>
-            <input id="phone" v-model="form.phone" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" required placeholder="10-digit phone number" :class="['input-field', errors.phone ? 'border-red-400 focus:ring-red-400' : '']" @input="form.phone = digitsOnly(form.phone)" @blur="validateField('phone')" />
+            <input id="phone" v-model="form.phone" type="tel" inputmode="numeric" maxlength="16" pattern="^(\+91\s?)?[6-9]\d{4}\s?\d{5}$" required placeholder="+91 98765 43210" :class="['input-field', errors.phone ? 'border-red-400 focus:ring-red-400' : '']" @input="form.phone = digitsOnly(form.phone)" @blur="validateField('phone')" />
             <p v-if="errors.phone" class="text-red-500 text-xs mt-1">{{ errors.phone }}</p>
           </div>
         </div>
@@ -126,7 +156,7 @@
           <svg v-if="status === 'submitting'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
           <span>{{ status === 'submitting' ? 'Submitting...' : 'Submit Quote Enquiry' }}</span>
         </button>
-      </form>
+      </v-form>
     </div>
   </div>
 </template>
@@ -137,7 +167,7 @@ import { useRoute } from 'vue-router';
 import { ChevronDown } from 'lucide-vue-next';
 import { useCategoryFlat } from '../composables/useCategories';
 import { api } from '../services/api';
-import { digitsOnly } from '../utils/phone';
+import { digitsOnly, isValidIndianMobilePhone } from '../utils/phone';
 
 const route = useRoute();
 
@@ -193,7 +223,7 @@ const validateField = (field) => {
   }
   if (field === 'phone') {
     if (!form.phone.trim()) errors.phone = 'Phone number is required';
-    else if (!/^\d{10}$/.test(form.phone)) errors.phone = 'Enter exactly 10 digits';
+    else if (!isValidIndianMobilePhone(form.phone)) errors.phone = 'Enter a valid Indian mobile number with +91 if needed';
   }
   if (field === 'category' && !form.category) errors.category = 'Please select a category';
   if (field === 'purpose' && !form.purpose) errors.purpose = 'Please select the purpose of requirement';

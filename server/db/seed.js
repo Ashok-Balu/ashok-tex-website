@@ -24,8 +24,8 @@ const HOMEPAGE_SECTION_DEFAULTS = [
 
 const NAV_DEFAULTS = [
   { label: 'Home', link: '/', display_order: 0 },
-  { label: 'Products', link: '/products', display_order: 1 },
-  { label: 'Collections', link: '/collections', display_order: 2 },
+  { label: 'Collections', link: '/collections', display_order: 1 },
+  { label: 'Products', link: '/products', display_order: 2 },
   { label: 'Why Ashok Tex', link: '/why-ashok-tex', display_order: 3 },
   { label: 'About', link: '/about', display_order: 4 },
   { label: 'Request Quote', link: '/request-quote', display_order: 5 },
@@ -104,10 +104,6 @@ async function seedCategoriesAndProducts() {
       priceMin: p.priceMin ?? null,
       priceMax: p.priceMax ?? null,
       priceUnit: p.priceUnit || 'Meter',
-      // Seed data stores MOQ as a combined string like "2,500 Meter" — strip the
-      // trailing unit so it isn't duplicated when re-joined with moqUnit for display.
-      moqValue: (p.moq || '').replace(/\s*meter$/i, '').trim(),
-      moqUnit: 'Meter',
       tags: [p.category].filter(Boolean),
       published: true,
       featured: !!p.featured,
@@ -116,7 +112,7 @@ async function seedCategoriesAndProducts() {
       seoTitle: p.seoTitle || '',
       seoDescription: p.seoDescription || '',
       images: (p.images || []).map((url, i) => ({ url, altText: p.name, isPrimary: i === 0 })),
-      specifications: (p.specifications || []).map((s) => ({ name: s.label, value: s.value })),
+      specifications: (p.specifications || []).filter((s) => (s.label || s.name || '').toString().trim().toLowerCase() !== 'moq').map((s) => ({ name: s.label, value: s.value })),
     });
   }
 

@@ -39,10 +39,10 @@
       </table>
     </div>
 
-    <div v-if="showModal" class="fixed inset-0 bg-ink-950/50 flex items-center justify-center p-4 z-50" @click.self="showModal = false">
+    <div v-if="showModal" class="fixed inset-0 bg-brand-900/20 flex items-center justify-center p-4 z-50" @click.self="showModal = false">
       <div class="bg-white rounded-3xl shadow-float w-full max-w-md p-8">
         <h2 class="font-display text-xl font-bold text-ink-900 mb-5">{{ editing ? 'Edit Menu Item' : 'New Menu Item' }}</h2>
-        <form class="space-y-4" @submit.prevent="save">
+        <v-form class="space-y-4" @submit.prevent="save">
           <div><label class="block text-sm font-medium text-ink-700 mb-1.5">Label *</label><input v-model="form.label" required class="input-field" /></div>
           <div><label class="block text-sm font-medium text-ink-700 mb-1.5">Link (e.g. /products)</label><input v-model="form.link" class="input-field" /></div>
           <label class="flex items-center gap-2 text-sm text-ink-700"><input v-model="form.visible" type="checkbox" class="rounded" /> Visible</label>
@@ -50,7 +50,7 @@
             <button type="submit" class="flex-1 py-2.5 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl text-sm">Save</button>
             <button type="button" class="flex-1 py-2.5 bg-surface-100 hover:bg-surface-200 text-ink-700 font-semibold rounded-xl text-sm" @click="showModal = false">Cancel</button>
           </div>
-        </form>
+        </v-form>
       </div>
     </div>
   </div>

@@ -8,6 +8,10 @@ const router = express.Router();
 let categoryCache = { data: null, timestamp: 0 };
 const CACHE_TTL = 5000; // 5 seconds
 
+export function getCategoryCache() { return categoryCache.data; }
+export function setCategoryCache(data) { categoryCache = { data, timestamp: Date.now() }; }
+export function invalidateCategoryCache() { categoryCache = { data: null, timestamp: 0 }; }
+
 router.get('/', async (req, res) => {
   try {
     const now = Date.now();
@@ -55,6 +59,7 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ success: false, message: 'Category name is required.' });
   }
   const category = await createCategory(req.body);
+  invalidateCategoryCache();
   res.status(201).json({ success: true, data: category });
 });
 
@@ -62,18 +67,21 @@ router.put('/reorder', async (req, res) => {
   const { orderedIds } = req.body;
   if (!Array.isArray(orderedIds)) return res.status(400).json({ success: false, message: 'orderedIds array is required.' });
   await reorderCategories(orderedIds);
+  invalidateCategoryCache();
   res.json({ success: true });
 });
 
 router.put('/:id', async (req, res) => {
   const category = await updateCategory(req.params.id, req.body);
   if (!category) return res.status(404).json({ success: false, message: 'Category not found.' });
+  invalidateCategoryCache();
   res.json({ success: true, data: category });
 });
 
 router.delete('/:id', async (req, res) => {
   const result = await deleteCategory(req.params.id);
   if (!result.success) return res.status(409).json(result);
+  invalidateCategoryCache();
   res.json(result);
 });
 

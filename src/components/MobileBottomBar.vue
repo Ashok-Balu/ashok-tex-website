@@ -36,8 +36,9 @@
 <script setup>
 import { computed } from 'vue';
 import { useCompany } from '../composables/useCompany';
+import { buildWhatsAppUrl } from '../utils/phone';
 
 const { company } = useCompany();
-const whatsappUrl = computed(() => company.value?.whatsappUrl || 'https://wa.me/917904154775');
+const whatsappUrl = computed(() => buildWhatsAppUrl(company.value?.whatsappUrl || company.value?.whatsappNumber || '917904154775'));
 const phoneHref = computed(() => `tel:${company.value?.phoneRaw || '+917904154775'}`);
 </script>

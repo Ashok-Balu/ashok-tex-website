@@ -42,7 +42,6 @@ import CollectionsShowcase from '../components/CollectionsShowcase.vue';
 import FeaturedProductsSection from '../components/FeaturedProductsSection.vue';
 import AboutSnippetSection from '../components/AboutSnippetSection.vue';
 import TestimonialsSection from '../components/TestimonialsSection.vue';
-import EnquirySection from '../components/EnquirySection.vue';
 import FabricTextureShowcase from '../components/FabricTextureShowcase.vue';
 
 // Maps each admin-configurable homepage_sections.section_key to the component that renders it.
@@ -54,7 +53,6 @@ const sectionComponents = {
   why_choose_us: FabricYourWay,
   about: AboutSnippetSection,
   testimonials: TestimonialsSection,
-  enquiry: EnquirySection,
 };
 
 const { sections } = useHomepageSections();
