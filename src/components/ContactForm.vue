@@ -6,22 +6,45 @@
     </div>
 
     <div class="p-8">
-      <div v-if="status === 'success'" class="p-5 bg-green-50 border border-green-200 rounded-2xl mb-6" role="alert">
-        <div class="flex items-start gap-3">
-          <div class="w-9 h-9 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
-            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+      <div v-if="status === 'success'" class="mb-6 overflow-hidden rounded-[28px] border border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-lime-50 shadow-[0_18px_45px_rgba(16,185,129,0.12)]" role="alert">
+        <div class="p-5 sm:p-6">
+          <div class="flex items-start gap-3 sm:gap-4">
+            <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500 shadow-lg shadow-emerald-500/20">
+              <svg class="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="mb-2 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-100 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">Message Sent</div>
+              <p class="font-display text-2xl font-bold text-emerald-900">Message sent!</p>
+              <p class="mt-2 text-sm leading-6 text-emerald-800 sm:text-[15px]">Mr. Arvinth.B will respond within 24 hours and help with your textile requirement.</p>
+            </div>
           </div>
-          <div>
-            <p class="font-semibold text-green-900">Message sent!</p>
-            <p class="text-sm text-green-700 mt-0.5">Mr. Arvinth.B will respond within 24 hours.</p>
-            <button type="button" class="mt-2 text-xs font-semibold text-green-800 underline" @click="status = 'idle'">Send another</button>
+
+          <div class="mt-5 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl border border-emerald-200 bg-white/80 p-3">
+              <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-600">Need instant help?</p>
+              <a href="tel:+917904154775" class="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 hover:text-emerald-700">
+                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">☎</span>
+                +91 79041 54775
+              </a>
+            </div>
+            <div class="rounded-2xl border border-emerald-200 bg-white/80 p-3">
+              <p class="text-[10px] font-semibold uppercase tracking-[0.14em] text-emerald-600">Quick channel</p>
+              <a href="https://wa.me/917904154775?text=Hello%20Ashok%20Tex%2C%20I%20want%20to%20follow%20up%20on%20my%20message." target="_blank" rel="noopener" class="mt-2 inline-flex items-center gap-2 text-sm font-semibold text-emerald-800 hover:text-emerald-700">
+                <span class="inline-flex h-7 w-7 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">✦</span>
+                WhatsApp Us
+              </a>
+            </div>
           </div>
+
+          <button type="button" class="mt-5 inline-flex items-center justify-center rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700" @click="status = 'idle'">
+            Send another
+          </button>
         </div>
       </div>
 
       <div v-if="status === 'error'" class="p-4 bg-red-50 border border-red-200 rounded-2xl mb-5 text-sm text-red-700">{{ errorMessage || 'Failed. Please call +91 7904154775.' }}</div>
 
-      <form v-if="status !== 'success'" @submit.prevent="handleSubmit" novalidate class="space-y-4">
+      <v-form v-if="status !== 'success'" @submit.prevent="handleSubmit" novalidate class="space-y-4">
         <div>
           <label for="contact-name" class="block text-sm font-medium text-ink-700 mb-1.5">Name <span class="text-red-500">*</span></label>
           <input id="contact-name" v-model="form.name" type="text" required placeholder="Your full name" :class="['input-field', errors.name ? 'border-red-400 focus:ring-red-400' : '']" @blur="validateField('name')" />
@@ -35,7 +58,7 @@
           </div>
           <div>
             <label for="contact-phone" class="block text-sm font-medium text-ink-700 mb-1.5">Phone <span class="text-red-500">*</span></label>
-            <input id="contact-phone" v-model="form.phone" type="tel" inputmode="numeric" maxlength="10" pattern="[0-9]{10}" required placeholder="10-digit phone number" :class="['input-field', errors.phone ? 'border-red-400 focus:ring-red-400' : '']" @input="form.phone = digitsOnly(form.phone)" @blur="validateField('phone')" />
+            <input id="contact-phone" v-model="form.phone" type="tel" inputmode="numeric" maxlength="16" pattern="^(\+91\s?)?[6-9]\d{4}\s?\d{5}$" required placeholder="+91 98765 43210" :class="['input-field', errors.phone ? 'border-red-400 focus:ring-red-400' : '']" @input="form.phone = digitsOnly(form.phone)" @blur="validateField('phone')" />
             <p v-if="errors.phone" class="text-red-500 text-xs mt-1">{{ errors.phone }}</p>
           </div>
         </div>
@@ -48,14 +71,14 @@
           <svg v-if="status === 'submitting'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
           {{ status === 'submitting' ? 'Sending...' : 'Send Message' }}
         </button>
-      </form>
+      </v-form>
     </div>
   </div>
 </template>
 
 <script setup>
 import { reactive, ref } from 'vue';
-import { digitsOnly } from '../utils/phone';
+import { digitsOnly, isValidIndianMobilePhone } from '../utils/phone';
 
 const form = reactive({ name: '', email: '', phone: '', message: '' });
 const errors = reactive({ name: '', email: '', phone: '', message: '' });
@@ -65,7 +88,7 @@ const errorMessage = ref('');
 const validateField = (field) => {
   if (field === 'name') errors.name = !form.name.trim() ? 'Name is required' : (form.name.trim().length < 2 ? 'Name is too short' : '');
   if (field === 'email') errors.email = !form.email.trim() ? 'Email is required' : (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()) ? 'Enter a valid email address' : '');
-  if (field === 'phone') errors.phone = !form.phone ? 'Phone is required' : (!/^\d{10}$/.test(form.phone) ? 'Enter exactly 10 digits' : '');
+  if (field === 'phone') errors.phone = !form.phone ? 'Phone is required' : (!isValidIndianMobilePhone(form.phone) ? 'Enter a valid Indian mobile number with +91 if needed' : '');
   if (field === 'message') errors.message = !form.message.trim() ? 'Message is required' : (form.message.trim().length < 10 ? 'Message must be at least 10 characters' : '');
 };
 

@@ -29,6 +29,14 @@ function formatMoq(value, unit) {
   return unit ? `${cleaned} ${unit}` : cleaned;
 }
 
+function filterProductSpecifications(specifications) {
+  if (!Array.isArray(specifications)) return [];
+  return specifications.filter((spec) => {
+    const label = (spec?.label ?? spec?.name ?? '').toString().trim();
+    return label.toLowerCase() !== 'moq';
+  });
+}
+
 function serializeProduct(p) {
   return {
     id: p.id,
@@ -44,16 +52,13 @@ function serializeProduct(p) {
     priceMax: p.price_max,
     priceUnit: p.price_unit,
     priceDisplay: p.price_min && p.price_max ? `\u20b9${formatNumber(p.price_min)} \u2013 \u20b9${formatNumber(p.price_max)} / ${p.price_unit}` : null,
-    moq: formatMoq(p.moq_value, p.moq_unit),
-    moqValue: cleanMoqValue(p.moq_value, p.moq_unit),
-    moqUnit: p.moq_unit,
     tags: p.tags,
     published: !!p.published,
     featured: !!p.featured,
     isLatest: !!p.is_latest,
     images: p.images.map((i) => i.url),
     imageDetails: p.images,
-    specifications: p.specifications,
+    specifications: filterProductSpecifications(p.specifications),
     seoTitle: p.seo_title,
     seoDescription: p.seo_description,
     ogImage: p.og_image,

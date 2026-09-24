@@ -12,7 +12,9 @@ export function validateEmail(email) {
 }
 
 export function validatePhone(phone) {
-  return typeof phone === 'string' && /^\d{10}$/.test(phone);
+  if (typeof phone !== 'string') return false;
+  const normalized = phone.replace(/\s+/g, '').replace(/^\+/, '');
+  return /^(?:91)?[6-9]\d{9}$/.test(normalized);
 }
 
 export function validateName(name) {

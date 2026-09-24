@@ -1,28 +1,27 @@
 <template>
-  <section class="py-20 bg-white" aria-labelledby="custom-fabric-heading">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-      <div class="max-w-2xl mb-14">
+  <section class="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(232,130,12,0.07),_transparent_32rem),linear-gradient(180deg,#fffdf8_0%,#fffaf3_100%)] py-20" aria-labelledby="custom-fabric-heading">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <div class="mb-14 max-w-2xl">
         <p class="section-label">{{ subtitle || 'Tailored B2B Manufacturing' }}</p>
         <h2 id="custom-fabric-heading" class="section-title mb-4">{{ title || 'Fabric, Your Way.' }}</h2>
         <p class="section-body">Whether you need standardized catalog varieties or custom yarn counts, weaves, and widths, Ashok Tex provides precision manufacturing direct from Karur.</p>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div v-for="(feature, i) in features" :key="i" class="bg-surface-50 rounded-2xl p-7 border border-surface-200 hover:border-brand-300 hover:shadow-card-hover transition-all duration-300 group">
-          <div :class="['w-12 h-12 rounded-xl flex items-center justify-center mb-5', feature.iconBg]">
-            <svg :class="['w-6 h-6', feature.iconColor]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="feature.icon"/></svg>
+      <div class="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div v-for="(feature, i) in features" :key="i" class="group rounded-[1.7rem] border border-[#f0dfc2] bg-white/85 p-7 shadow-[0_20px_45px_-28px_rgba(55,34,20,0.28)] transition-all duration-300 hover:-translate-y-1 hover:border-brand-300 hover:shadow-[0_24px_60px_-30px_rgba(55,34,20,0.35)]">
+          <div :class="['mb-5 flex h-12 w-12 items-center justify-center rounded-2xl', feature.iconBg]">
+            <svg :class="['h-6 w-6', feature.iconColor]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="feature.icon"/></svg>
           </div>
-          <h3 class="font-display text-xl font-semibold text-ink-900 mb-2 group-hover:text-brand-700 transition-colors">{{ feature.title }}</h3>
-          <p class="text-sm text-ink-500 leading-relaxed mb-4">{{ feature.desc }}</p>
-          <p class="text-xs font-medium text-ink-400">{{ feature.tags }}</p>
+          <h3 class="mb-2 font-display text-xl font-semibold text-ink-900 transition-colors group-hover:text-brand-700">{{ feature.title }}</h3>
+          <p class="mb-4 text-sm leading-relaxed text-ink-500">{{ feature.desc }}</p>
+          <p class="text-xs font-medium uppercase tracking-[0.12em] text-ink-400">{{ feature.tags }}</p>
         </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-6 bg-brand-50 rounded-2xl border border-brand-100">
+      <div class="flex flex-col items-center justify-between gap-4 rounded-[1.8rem] border border-[#f0dfc2] bg-[linear-gradient(135deg,_rgba(255,248,238),_rgba(255,255,255))] p-6 shadow-[0_20px_50px_-32px_rgba(52,34,18,0.32)] sm:flex-row">
         <div>
-          <p class="font-semibold text-ink-900 text-sm">Have custom requirements?</p>
-          <p class="text-sm text-ink-500 mt-0.5">Share your target specifications, sample patterns, or desired GSM.</p>
+          <p class="text-sm font-semibold text-ink-900">Have custom requirements?</p>
+          <p class="mt-0.5 text-sm text-ink-500">Share your target specifications, sample patterns, or desired GSM.</p>
         </div>
         <router-link to="/request-quote" class="btn-brand shrink-0">
           Submit Requirements →

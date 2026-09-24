@@ -1,9 +1,13 @@
 import { collection, nextId, nextDisplayOrder } from './mongoHelpers.js';
 const items = () => collection('testimonials');
+const normalizeId = (id) => {
+  const value = Number(id);
+  return Number.isFinite(value) && String(value) === String(id).trim() ? value : id;
+};
 export async function getPublishedTestimonials() { return (await items()).find({ published: true }).sort({ display_order: 1, id: -1 }).toArray(); }
 export async function getAllTestimonials() { return (await items()).find().sort({ display_order: 1, id: -1 }).toArray(); }
-export async function getTestimonialById(id) { return (await items()).findOne({ id }); }
+export async function getTestimonialById(id) { return (await items()).findOne({ id: normalizeId(id) }); }
 export async function createTestimonial(data) { const testimonial = { id: await nextId('testimonials'), customer_name: data.customerName, role: data.role || '', quote: data.quote, image: data.image || '', rating: data.rating ?? 5, published: data.published !== false, display_order: data.displayOrder ?? await nextDisplayOrder('testimonials'), created_at: new Date() }; await (await items()).insertOne(testimonial); return testimonial; }
-export async function updateTestimonial(id, data) { const existing = await getTestimonialById(id); if (!existing) return null; const updated = { ...existing, customer_name: data.customerName ?? existing.customer_name, role: data.role ?? existing.role, quote: data.quote ?? existing.quote, image: data.image ?? existing.image, rating: data.rating ?? existing.rating, published: data.published !== undefined ? data.published : existing.published, display_order: data.displayOrder ?? existing.display_order }; await (await items()).replaceOne({ id }, updated); return updated; }
-export async function deleteTestimonial(id) { await (await items()).deleteOne({ id }); return { success: true }; }
-export async function reorderTestimonials(orderedIds) { const store = await items(); await Promise.all(orderedIds.map((id, index) => store.updateOne({ id }, { $set: { display_order: index } }))); }
+export async function updateTestimonial(id, data) { const normalizedId = normalizeId(id); const existing = await getTestimonialById(normalizedId); if (!existing) return null; const updated = { ...existing, customer_name: data.customerName ?? existing.customer_name, role: data.role ?? existing.role, quote: data.quote ?? existing.quote, image: data.image ?? existing.image, rating: data.rating ?? existing.rating, published: data.published !== undefined ? data.published : existing.published, display_order: data.displayOrder ?? existing.display_order }; await (await items()).replaceOne({ id: normalizedId }, updated); return updated; }
+export async function deleteTestimonial(id) { await (await items()).deleteOne({ id: normalizeId(id) }); return { success: true }; }
+export async function reorderTestimonials(orderedIds) { const store = await items(); await Promise.all(orderedIds.map((id, index) => store.updateOne({ id: normalizeId(id) }, { $set: { display_order: index } }))); }

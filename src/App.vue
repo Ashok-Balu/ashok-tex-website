@@ -5,7 +5,7 @@
     </div>
 
     <Header v-if="!isAdminRoute" />
-    <main class="public-main flex-grow">
+    <main :class="['public-main flex-grow', { 'admin-main': isAdminRoute }]">
       <router-view v-slot="{ Component }">
         <transition name="page-fade" mode="out-in">
           <component :is="Component" />
@@ -40,13 +40,14 @@ import MobileBottomBar from './components/MobileBottomBar.vue';
 import { injectStructuredData, getOrganizationSchema } from './utils/schema';
 import { useCompany } from './composables/useCompany';
 import { apiLoading, api } from './services/api';
+import { buildWhatsAppUrl } from './utils/phone';
 
 const route = useRoute();
 const isAdminRoute = computed(() => !!route.meta?.isAdmin);
 const { company } = useCompany();
 const whatsappUrl = computed(() => {
-  const number = company.value?.whatsappNumber || '917904154775';
-  return `https://wa.me/${number}?text=Hello%20Ashok%20Tex%2C%20I%20am%20interested%20in%20your%20fabric%20products.`;
+  const rawNumber = company.value?.whatsappUrl || company.value?.whatsappNumber || '917904154775';
+  return buildWhatsAppUrl(rawNumber, 'Hello Ashok Tex, I am interested in your fabric products.');
 });
 
 function updateHeadMeta() {
@@ -87,20 +88,27 @@ watch(company, (val) => {
 watch(() => route.fullPath, () => updateHeadMeta(), { immediate: true });
 
 onMounted(() => {
-  if (route.meta?.isAdmin) return;
-
   const visitorKey = 'ashoktex_visitor_session';
   let sessionId = localStorage.getItem(visitorKey);
   if (!sessionId) {
-    sessionId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    sessionId = `visitor-${Date.now()}-${Math.random().toString(16).slice(2)}`;
     localStorage.setItem(visitorKey, sessionId);
   }
 
-  api.analytics.visit({
-    sessionId,
-    path: route.fullPath,
-    referrer: document.referrer || '',
-    userAgent: navigator.userAgent,
-  }).catch(() => {});
+  const trackVisit = () => {
+    if (route.meta?.isAdmin) return;
+    api.analytics.visit({
+      sessionId,
+      path: route.fullPath,
+      referrer: document.referrer || '',
+      userAgent: navigator.userAgent,
+    }).catch(() => {});
+  };
+
+  trackVisit();
+
+  watch(() => route.fullPath, () => {
+    trackVisit();
+  }, { flush: 'post' });
 });
 </script>

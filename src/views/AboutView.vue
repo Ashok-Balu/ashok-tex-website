@@ -16,7 +16,7 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
 
       <!-- Story Grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-14 items-start pb-16 border-b border-surface-100">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-14 items-start">
         <div class="space-y-5">
           <h2 class="font-display text-3xl font-bold text-ink-900">The Legacy of Precision Weaving</h2>
           <p class="text-base text-ink-600 leading-relaxed">Founded in 1995 by <strong class="text-ink-900">Mr. Balusamy.M</strong> in Karur, Ashok Tex was built on a foundation of dependable manufacturing, accurate yarn selection, and long-term customer trust.</p>
@@ -25,20 +25,49 @@
           <blockquote class="border-l-4 border-brand-500 pl-5 py-2 bg-brand-50 rounded-r-xl">
             <p class="font-display text-lg italic text-ink-900">"Delivering dependable yardage with transparent specifications and enduring commercial value for every client."</p>
           </blockquote>
+
         </div>
         <div class="space-y-6">
           <div class="aspect-[4/3] rounded-3xl overflow-hidden shadow-section">
             <img :src="legacyImageUrl || 'https://images.unsplash.com/photo-1528747045269-390fe33c19f2?auto=format&fit=crop&w=1200&q=85'" :alt="legacyImageAlt" class="w-full h-full object-cover" />
           </div>
-          <div class="bg-surface-50 rounded-2xl border border-surface-200 p-6">
-            <h3 class="font-semibold text-ink-900 mb-4 text-sm">Corporate Profile</h3>
-            <dl class="space-y-3 text-sm">
-              <div v-for="fact in companyFacts" :key="fact.label" class="flex justify-between gap-4">
-                <dt class="text-ink-500">{{ fact.label }}</dt>
-                <dd class="font-medium text-ink-900 text-right">{{ fact.value }}</dd>
-              </div>
-            </dl>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-14 items-stretch pt-10 pb-16 border-b border-surface-100">
+        <div class="rounded-3xl border border-surface-200 bg-gradient-to-br from-white via-surface-50 to-brand-50/60 p-5 shadow-sm">
+          <div class="flex items-start justify-between gap-4">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-brand-600">Why buyers stay</p>
+              <h3 class="mt-1 font-display text-2xl font-bold text-ink-900">Made for dependable buying</h3>
+            </div>
+            <span class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-brand-500 text-sm font-bold text-white shadow-sm">AT</span>
           </div>
+          <div class="mt-5 grid gap-3 sm:grid-cols-3 lg:grid-cols-1">
+            <div v-for="highlight in buyerHighlights" :key="highlight.title" class="flex items-start gap-3 rounded-2xl border border-white/80 bg-white/75 p-3">
+              <span class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-brand-100 text-xs font-bold text-brand-700">{{ highlight.number }}</span>
+              <div>
+                <p class="text-sm font-semibold text-ink-900">{{ highlight.title }}</p>
+                <p class="mt-0.5 text-xs leading-5 text-ink-500">{{ highlight.description }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="rounded-3xl border border-surface-200 bg-surface-50 p-6 shadow-sm">
+          <div class="mb-4 flex items-center justify-between gap-3">
+            <div>
+              <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-ink-400">At a glance</p>
+              <h3 class="mt-1 font-display text-2xl font-bold text-ink-900">Corporate Profile</h3>
+            </div>
+            <span class="text-xs font-semibold uppercase tracking-[0.14em] text-brand-600">Since 1995</span>
+          </div>
+          <dl class="space-y-3 text-sm">
+            <div v-for="fact in companyFacts" :key="fact.label" class="flex justify-between gap-4 border-b border-surface-200/80 pb-2 last:border-0 last:pb-0">
+              <dt class="text-ink-500">{{ fact.label }}</dt>
+              <dd class="font-medium text-ink-900 text-right">{{ fact.value }}</dd>
+            </div>
+          </dl>
         </div>
       </div>
 
@@ -153,5 +182,11 @@ const principles = [
   { title: 'Quality Consistency', desc: 'Every meter is monitored for yarn balance, loom tension, and finishing quality so buyers receive dependable performance from first sample to bulk production.' },
   { title: 'Customized Production', desc: 'We support fabric variations in weave, color, width, and finish to align with specific garment and industrial requirements.' },
   { title: 'Pan-India Distribution', desc: 'With a reliable Karur-based supply chain and direct communication channels, we ensure timely dispatch and consistent commercial support.' },
+];
+
+const buyerHighlights = [
+  { number: '01', title: 'Clear specifications', description: 'Know the weave, finish, and application before production begins.' },
+  { number: '02', title: 'Flexible production', description: 'Develop the right width, colour, and texture for your requirement.' },
+  { number: '03', title: 'Direct support', description: 'Work with a responsive Karur team from sample to dispatch.' },
 ];
 </script>

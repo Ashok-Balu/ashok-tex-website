@@ -8,7 +8,7 @@
     <p v-if="formError" class="p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">{{ formError }}</p>
     <p v-if="saved" class="p-3 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">Product saved successfully.</p>
 
-    <form class="space-y-8" @submit.prevent="save">
+    <v-form class="space-y-8" @submit.prevent="save">
     <fieldset :disabled="uploading" class="space-y-8 min-w-0">
 
       <!-- Basic Information -->
@@ -37,29 +37,6 @@
         </div>
       </section>
 
-      <!-- Pricing -->
-      <section class="bg-white rounded-2xl border border-surface-200 p-4 sm:p-6 space-y-4">
-        <h2 class="text-sm font-semibold text-ink-900 uppercase tracking-wide">Pricing & MOQ</h2>
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div>
-            <label class="block text-sm font-medium text-ink-700 mb-1.5">Min Price</label>
-            <input v-model.number="form.priceMin" type="number" step="0.01" class="input-field text-base" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-ink-700 mb-1.5">Max Price</label>
-            <input v-model.number="form.priceMax" type="number" step="0.01" class="input-field text-base" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-ink-700 mb-1.5">Price Unit</label>
-            <input v-model="form.priceUnit" class="input-field text-base" placeholder="Meter" />
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-ink-700 mb-1.5">MOQ</label>
-            <input v-model="form.moqValue" class="input-field text-base" placeholder="2,500" />
-          </div>
-        </div>
-      </section>
-
       <!-- Description -->
       <section class="bg-white rounded-2xl border border-surface-200 p-4 sm:p-6 space-y-4">
         <h2 class="text-sm font-semibold text-ink-900 uppercase tracking-wide">Description</h2>
@@ -73,18 +50,24 @@
         </div>
       </section>
 
-      <!-- Dynamic Attributes / Specifications -->
+      <!-- Specifications -->
       <section class="bg-white rounded-2xl border border-surface-200 p-4 sm:p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
-          <h2 class="text-sm font-semibold text-ink-900 uppercase tracking-wide">Specifications (Custom Attributes)</h2>
-          <button type="button" class="text-xs font-semibold text-brand-600 hover:underline whitespace-nowrap" @click="addSpec">+ Add Field</button>
-        </div>
-        <p class="text-xs text-ink-400">Add any specification field (e.g. GSM, Finish, Weave Type). Empty fields are hidden automatically on the product page.</p>
-        <div v-for="(spec, i) in form.specifications" :key="i" class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
-          <input v-model="spec.name" placeholder="Name (e.g. GSM)" class="input-field sm:col-span-4 text-base" />
-          <input v-model="spec.value" placeholder="Value (e.g. 180)" class="input-field sm:col-span-4 text-base" />
-          <input v-model="spec.unit" placeholder="Unit (optional)" class="input-field sm:col-span-3 text-base" />
-          <button type="button" class="col-span-1 text-red-500 hover:text-red-700 text-lg">×</button>
+        <h2 class="text-sm font-semibold text-ink-900 uppercase tracking-wide">Specifications</h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div v-for="spec in form.specifications" :key="spec.name" class="space-y-1.5">
+            <label class="block text-sm font-medium text-ink-700 mb-1.5">{{ spec.name }}</label>
+            <select
+              v-if="getSpecificationOptions(spec.name)?.length"
+              v-model="spec.value"
+              class="input-field text-base"
+            >
+              <option value="">-- Select --</option>
+              <option v-for="option in getSpecificationOptions(spec.name)" :key="option" :value="option">
+                {{ option }}
+              </option>
+            </select>
+            <input v-else v-model="spec.value" class="input-field text-base" />
+          </div>
         </div>
       </section>
 
@@ -151,7 +134,7 @@
         <router-link to="/admin/products" class="w-full sm:w-auto px-6 py-3 bg-surface-100 hover:bg-surface-200 text-ink-700 font-semibold rounded-xl text-sm text-center">Cancel</router-link>
       </div>
     </fieldset>
-    </form>
+    </v-form>
   </div>
 </template>
 
@@ -168,6 +151,42 @@ const saved = ref(false);
 const uploading = ref(false);
 const saving = ref(false);
 const categoryOptions = ref([]);
+const STANDARD_SPECIFICATION_FIELDS = [
+  'Business Type',
+  'Material',
+  'Pattern',
+  'Technics',
+  'Wash Type',
+  'Usage / Application',
+  'Country of Origin',
+];
+const STANDARD_SPEC_OPTIONS = {
+  'Business Type': ['Manufacturer, Supplier'],
+  Material: ['Cotton', 'Woven', 'Linen', 'Cotton Blend', 'Recycled', 'Synthetic', 'Other'],
+  Pattern: ['Checked', 'Striped', 'Dobby', 'Waffle', 'Plain', 'Checkered', 'Printed', 'Other'],
+  Technics: ['Machine Made', 'Handloom', 'Powerloom', 'Other'],
+  'Wash Type': ['Hand Wash', 'Machine Wash', 'Cold Wash', 'Dry Clean Only'],
+  'Usage / Application': ['Textile Industry', 'Garment Manufacturing', 'Home Textile', 'Apparel Industry', 'Uniforms', 'Other'],
+  'Country of Origin': ['India', 'China', 'Vietnam', 'Bangladesh', 'Other'],
+};
+
+function buildStandardSpecifications(items = []) {
+  const specificationMap = new Map();
+  (items || []).forEach((item) => {
+    const label = String(item?.label || item?.name || '').trim();
+    if (!label) return;
+    specificationMap.set(label.toLowerCase(), item);
+  });
+
+  return STANDARD_SPECIFICATION_FIELDS.map((label) => {
+    const matched = specificationMap.get(label.toLowerCase()) || null;
+    return {
+      name: label,
+      value: matched?.value ?? matched?.rawValue ?? '',
+      unit: matched?.unit ?? '',
+    };
+  });
+}
 
 const form = ref(emptyForm());
 const tagsInput = computed({
@@ -175,12 +194,16 @@ const tagsInput = computed({
   set: (val) => { form.value.tags = val.split(',').map((t) => t.trim()).filter(Boolean); },
 });
 
+function getSpecificationOptions(name) {
+  return STANDARD_SPEC_OPTIONS[name] || [];
+}
+
 function emptyForm() {
   return {
     name: '', slug: '', categoryId: null, tags: [],
-    priceMin: null, priceMax: null, priceUnit: 'Meter', moqValue: '', moqUnit: 'Meter',
+    priceMin: null, priceMax: null, priceUnit: 'Meter',
     shortDescription: '', description: '',
-    specifications: [{ name: '', value: '', unit: '' }],
+    specifications: buildStandardSpecifications(),
     images: [],
     seoTitle: '', seoDescription: '',
     published: true, featured: false, isLatest: false,
@@ -193,10 +216,6 @@ function flatten(nodes, depth = 0, out = []) {
     if (node.children?.length) flatten(node.children, depth + 1, out);
   }
   return out;
-}
-
-function addSpec() {
-  form.value.specifications.push({ name: '', value: '', unit: '' });
 }
 
 function setPrimary(index) {
@@ -228,9 +247,8 @@ async function loadProduct(id) {
     name: p.name, slug: p.slug, categoryId: p.category_id,
     tags: Array.isArray(p.tags) ? p.tags : [],
     priceMin: p.price_min, priceMax: p.price_max, priceUnit: p.price_unit,
-    moqValue: p.moq_value, moqUnit: p.moq_unit,
     shortDescription: p.short_description, description: p.description,
-    specifications: p.specifications.length ? p.specifications.map((s) => ({ name: s.label, value: s.rawValue, unit: s.unit })) : [{ name: '', value: '', unit: '' }],
+    specifications: buildStandardSpecifications(Array.isArray(p.specifications) ? p.specifications : []),
     images: p.images.map((img) => ({ url: img.url, altText: img.altText, isPrimary: img.isPrimary })),
     seoTitle: p.seo_title, seoDescription: p.seo_description,
     published: !!p.published, featured: !!p.featured, isLatest: !!p.is_latest,
@@ -243,7 +261,12 @@ async function save() {
   saved.value = false;
   saving.value = true;
   try {
-    const payload = { ...form.value, specifications: form.value.specifications.filter((s) => s.name && s.value) };
+    const payload = {
+      ...form.value,
+      specifications: form.value.specifications
+        .filter((spec) => (spec.value || '').toString().trim())
+        .map((spec) => ({ label: spec.name, value: spec.value, unit: spec.unit || '' })),
+    };
     if (isEdit.value) {
       await adminApi.products.update(route.params.id, payload);
     } else {

@@ -1,18 +1,18 @@
 <template>
-  <section class="bg-surface-50 border-y border-surface-200 py-12" aria-label="Company Statistics">
+  <section class="relative overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(232,130,12,0.08),_transparent_32rem),linear-gradient(180deg,#fffdf8_0%,#fffaf3_100%)] py-14" aria-label="Company Statistics">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div v-if="title" class="text-center max-w-2xl mx-auto mb-10">
+      <div v-if="title" class="mx-auto mb-10 max-w-2xl text-center">
         <p v-if="subtitle" class="section-label">{{ subtitle }}</p>
         <h2 class="section-title">{{ title }}</h2>
       </div>
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
-        <div v-for="stat in stats" :key="stat.label" class="flex items-center gap-4 p-5 bg-white rounded-2xl shadow-card border border-surface-100">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" :class="stat.iconBg">
-            <svg class="w-6 h-6" :class="stat.iconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="stat.icon"/></svg>
+      <div class="grid grid-cols-2 gap-5 lg:grid-cols-4 lg:gap-6">
+        <div v-for="stat in stats" :key="stat.label" class="flex items-center gap-4 rounded-[1.5rem] border border-[#f0dfc1] bg-white/80 p-5 shadow-[0_20px_40px_-30px_rgba(48,31,18,0.35)] backdrop-blur-sm">
+          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl" :class="stat.iconBg">
+            <svg class="h-6 w-6" :class="stat.iconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="stat.icon"/></svg>
           </div>
           <div>
-            <p class="font-display text-2xl font-bold text-ink-900 leading-none">{{ stat.value }}</p>
-            <p class="text-xs text-ink-500 mt-1 font-medium">{{ stat.label }}</p>
+            <p class="font-display text-2xl font-bold leading-none text-ink-900">{{ stat.value }}</p>
+            <p class="mt-1 text-xs font-medium text-ink-500">{{ stat.label }}</p>
           </div>
         </div>
       </div>

@@ -9,7 +9,7 @@
       {{ formError }}
     </p>
 
-    <form class="mx-auto max-w-5xl space-y-5 rounded-2xl border border-surface-200 bg-white p-4 sm:p-6 shadow-sm" @submit.prevent="save">
+    <v-form class="mx-auto max-w-5xl space-y-5 rounded-2xl border border-surface-200 bg-white p-4 sm:p-6 shadow-sm" @submit.prevent="save">
       <div>
         <label class="block text-sm font-medium text-ink-700 mb-1.5">Name *</label>
         <input v-model="form.name" required class="input-field text-base" />
@@ -75,7 +75,7 @@
           Cancel
         </router-link>
       </div>
-    </form>
+    </v-form>
   </div>
 </template>
 
