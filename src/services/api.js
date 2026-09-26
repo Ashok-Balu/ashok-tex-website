@@ -1,6 +1,7 @@
 const API_BASE = '/api';
 import { ref } from 'vue';
 import { useAdminNotifications } from '../composables/useAdminNotifications';
+import { validateImageFiles } from '../utils/imageUpload';
 
 const requestCache = new Map();
 const activeRequests = new Map();
@@ -211,6 +212,9 @@ export const adminApi = {
   settings: {
     company: () => request('/admin/settings/company', { auth: true }),
     updateCompany: (data) => request('/admin/settings/company', { method: 'PUT', body: data, auth: true }),
+    specificationOptions: () => request('/admin/settings/specification-options', { auth: true }),
+    addSpecificationOption: (field, value) => request('/admin/settings/specification-options', { method: 'POST', body: { field, value }, auth: true }),
+    deleteSpecificationOption: (field, value) => request('/admin/settings/specification-options', { method: 'DELETE', body: { field, value }, auth: true }),
     navigation: () => request('/admin/settings/navigation', { auth: true }),
     createNavItem: (data) => request('/admin/settings/navigation', { method: 'POST', body: data, auth: true }),
     updateNavItem: (id, data) => request(`/admin/settings/navigation/${id}`, { method: 'PUT', body: data, auth: true }),
@@ -220,6 +224,7 @@ export const adminApi = {
     updateHomepageSection: (key, data) => request(`/admin/settings/homepage-sections/${key}`, { method: 'PUT', body: data, auth: true }),
   },
   upload: (files) => {
+    validateImageFiles(files);
     const formData = new FormData();
     files.forEach((file) => formData.append('images', file));
     return request('/admin/upload', { method: 'POST', body: formData, auth: true, isFormData: true });

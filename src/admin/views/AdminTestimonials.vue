@@ -123,7 +123,11 @@
 
 <script setup>
 import { computed, ref, onMounted } from 'vue';
+import { VBtn, VDataTable, VIcon, VRating } from 'vuetify/components';
 import { adminApi } from '../../services/api';
+import { useAdminConfirm } from '../../composables/useAdminConfirm';
+
+const { confirmAction } = useAdminConfirm();
 
 const testimonials = ref([]);
 const showModal = ref(false);
@@ -195,7 +199,7 @@ async function togglePublish(t) {
 }
 
 async function remove(t) {
-  if (!confirm(`Delete testimonial from "${t.customer_name}"?`)) return;
+  if (!await confirmAction(`Delete testimonial from "${t.customer_name}"?`, { title: 'Delete this testimonial?' })) return;
   await adminApi.testimonials.remove(t.id);
   testimonials.value = testimonials.value.filter((item) => item.id !== t.id);
 }

@@ -2,10 +2,13 @@
   <section class="hero-stage relative flex items-center overflow-hidden bg-brand-50 text-white">
     <div class="absolute inset-0">
       <img
-        src="/powerloom-fabric.jpg"
+        src="/powerloom-fabric-1600.jpg"
+        srcset="/powerloom-fabric-800.jpg 800w, /powerloom-fabric-1600.jpg 1600w"
+        sizes="100vw"
         alt="Close-up of checkered powerloom fabric"
         class="h-full w-full object-cover object-center opacity-75"
         loading="eager"
+        fetchpriority="high"
       />
       <div class="absolute inset-0 bg-gradient-to-r from-[#1a110d]/85 via-[#1b120d]/55 to-[#1b120d]/20"></div>
       <div class="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(232,130,12,0.24),_transparent_24rem)]"></div>

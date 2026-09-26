@@ -59,6 +59,9 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { adminApi } from '../../services/api';
+import { useAdminConfirm } from '../../composables/useAdminConfirm';
+
+const { confirmAction } = useAdminConfirm();
 
 const items = ref([]);
 const showModal = ref(false);
@@ -101,7 +104,7 @@ async function toggleVisible(item) {
 }
 
 async function remove(item) {
-  if (!confirm(`Delete menu item "${item.label}"?`)) return;
+  if (!await confirmAction(`Delete menu item "${item.label}"?`, { title: 'Delete this menu item?' })) return;
   await adminApi.settings.removeNavItem(item.id);
   items.value = items.value.filter((entry) => entry.id !== item.id);
 }

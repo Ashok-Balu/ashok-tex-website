@@ -122,8 +122,12 @@
 
 <script setup>
 import { computed, ref, onMounted } from 'vue';
+import { VDataTable } from 'vuetify/components';
 import { CheckCircle2, Clock3, Inbox, Mail, MessageSquare, Phone, Search } from 'lucide-vue-next';
 import { adminApi } from '../../services/api';
+import { useAdminConfirm } from '../../composables/useAdminConfirm';
+
+const { confirmAction } = useAdminConfirm();
 
 const tab = ref('enquiries');
 const enquiries = ref([]);
@@ -188,7 +192,7 @@ async function updateStatus(e, status) {
 }
 
 async function removeEnquiry(e) {
-  if (!confirm(`Delete enquiry from "${e.name}"?`)) return;
+  if (!await confirmAction(`Delete enquiry from "${e.name}"?`, { title: 'Delete this enquiry?' })) return;
   await adminApi.enquiries.remove(e.id);
   enquiries.value = enquiries.value.filter((item) => item.id !== e.id);
 }
@@ -205,7 +209,7 @@ async function updateMessageStatus(m, status) {
 }
 
 async function removeMessage(m) {
-  if (!confirm(`Delete message from "${m.name}"?`)) return;
+  if (!await confirmAction(`Delete message from "${m.name}"?`, { title: 'Delete this message?' })) return;
   await adminApi.contacts.remove(m.id);
   messages.value = messages.value.filter((item) => item.id !== m.id);
 }

@@ -1,24 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import HomeView from '../views/HomeView.vue';
-import AboutView from '../views/AboutView.vue';
-import CollectionsView from '../views/CollectionsView.vue';
-import CollectionDetailView from '../views/CollectionDetailView.vue';
-import ProductsView from '../views/ProductsView.vue';
-import ProductDetailView from '../views/ProductDetailView.vue';
-import WhyAshokTexView from '../views/WhyAshokTexView.vue';
-import RequestQuoteView from '../views/RequestQuoteView.vue';
-import ContactView from '../views/ContactView.vue';
-import PrivacyPolicyView from '../views/PrivacyPolicyView.vue';
-import TermsView from '../views/TermsView.vue';
-import TestimonialsView from '../views/TestimonialsView.vue';
-import NotFoundView from '../views/NotFoundView.vue';
 import { useAdminAuth } from '../composables/useAdminAuth';
 
 const routes = [
   {
     path: '/',
     name: 'Home',
-    component: HomeView,
+    component: () => import('../views/HomeView.vue'),
     meta: {
       title: 'Ashok Tex | Textile Fabric Manufacturer & Supplier in Karur',
       description: 'Ashok Tex is a textile fabric manufacturer and supplier in Karur, Tamil Nadu. Cotton, Woven & Recycled fabrics. Est. 1995.',
@@ -27,7 +14,7 @@ const routes = [
   {
     path: '/about',
     name: 'About',
-    component: AboutView,
+    component: () => import('../views/AboutView.vue'),
     meta: {
       title: 'About Ashok Tex | Textile Manufacturer Est. 1995 in Karur',
       description: 'About Ashok Tex — founded in 1995 by Mr. Balusamy.M in Karur. Three decades of cotton, woven and recycled textile manufacturing.',
@@ -36,7 +23,7 @@ const routes = [
   {
     path: '/collections',
     name: 'Collections',
-    component: CollectionsView,
+    component: () => import('../views/CollectionsView.vue'),
     meta: {
       title: 'Fabric Collections | Ashok Tex',
       description: 'Explore Ashok Tex fabric collections, manufactured in Karur, Tamil Nadu.',
@@ -46,13 +33,13 @@ const routes = [
   {
     path: '/collections/:category',
     name: 'CollectionDetail',
-    component: CollectionDetailView,
+    component: () => import('../views/CollectionDetailView.vue'),
     meta: { title: 'Fabric Collection | Ashok Tex Karur' },
   },
   {
     path: '/products',
     name: 'Products',
-    component: ProductsView,
+    component: () => import('../views/ProductsView.vue'),
     meta: {
       title: 'Textile Fabrics | Ashok Tex',
       description: 'Browse all fabric products from Ashok Tex — direct wholesale mill supply from Karur, Tamil Nadu.',
@@ -62,13 +49,13 @@ const routes = [
   {
     path: '/products/:slug',
     name: 'ProductDetail',
-    component: ProductDetailView,
+    component: () => import('../views/ProductDetailView.vue'),
     meta: { title: 'Fabric Details | Ashok Tex Karur' },
   },
   {
     path: '/why-ashok-tex',
     name: 'WhyAshokTex',
-    component: WhyAshokTexView,
+    component: () => import('../views/WhyAshokTexView.vue'),
     meta: {
       title: 'Why Choose Ashok Tex | Trusted Textile Manufacturer in Karur',
       description: 'Why choose Ashok Tex - established 1995, quality focused, pan-India supply, cotton woven and recycled fabric manufacturer.',
@@ -77,7 +64,7 @@ const routes = [
   {
     path: '/testimonials',
     name: 'Testimonials',
-    component: TestimonialsView,
+    component: () => import('../views/TestimonialsView.vue'),
     meta: {
       title: 'Customer Testimonials | Ashok Tex Fabric Manufacturer',
       description: 'What customers say about Ashok Tex - testimonials from garment manufacturers and textile buyers across India.',
@@ -86,7 +73,7 @@ const routes = [
   {
     path: '/request-quote',
     name: 'RequestQuote',
-    component: RequestQuoteView,
+    component: () => import('../views/RequestQuoteView.vue'),
     meta: {
       title: 'Request a Quote | Ashok Tex Fabric Manufacturer Karur',
       description: 'Request a fabric quote from Ashok Tex, Karur. Get direct mill pricing for cotton, woven and recycled fabrics.',
@@ -95,7 +82,7 @@ const routes = [
   {
     path: '/contact',
     name: 'Contact',
-    component: ContactView,
+    component: () => import('../views/ContactView.vue'),
     meta: {
       title: 'Contact Ashok Tex | Textile Fabric Manufacturer in Karur',
       description: 'Contact Ashok Tex in Karur, Tamil Nadu. Phone: +91 7904154775. Email: ashoktex.info@gmail.com.',
@@ -104,13 +91,13 @@ const routes = [
   {
     path: '/privacy-policy',
     name: 'PrivacyPolicy',
-    component: PrivacyPolicyView,
+    component: () => import('../views/PrivacyPolicyView.vue'),
     meta: { title: 'Privacy Policy | Ashok Tex', description: 'Privacy policy for Ashok Tex website.' },
   },
   {
     path: '/terms',
     name: 'Terms',
-    component: TermsView,
+    component: () => import('../views/TermsView.vue'),
     meta: { title: 'Terms & Conditions | Ashok Tex', description: 'Terms and conditions for Ashok Tex wholesale fabric supply.' },
   },
 
@@ -143,7 +130,7 @@ const routes = [
   {
     path: '/:pathMatch(.*)*',
     name: 'NotFound',
-    component: NotFoundView,
+    component: () => import('../views/NotFoundView.vue'),
     meta: { title: '404 - Page Not Found | Ashok Tex' },
   },
 ];

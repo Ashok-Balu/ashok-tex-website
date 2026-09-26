@@ -12,7 +12,7 @@
     </div>
 
     <!-- Sidebar Overlay (Mobile) -->
-    <div v-if="sidebarOpen && window.innerWidth < 1024" class="fixed inset-0 bg-brand-900/20 z-40 lg:hidden" @click="sidebarOpen = false"></div>
+    <div v-if="sidebarOpen" class="fixed inset-0 bg-brand-900/20 z-40 lg:hidden" @click="sidebarOpen = false"></div>
 
     <!-- Sidebar -->
     <aside 
@@ -68,30 +68,56 @@
       </div>
     </main>
 
-    <div class="admin-notifications fixed bottom-5 right-5 z-[100] w-[min(24rem,calc(100vw-2rem))] space-y-3" aria-live="polite" aria-atomic="true">
+    <div class="admin-notifications fixed right-4 top-4 z-[100] w-[min(24rem,calc(100vw-2rem))] space-y-3 sm:right-6 sm:top-6" aria-live="polite" aria-atomic="false">
       <transition-group name="toast" tag="div" class="space-y-3">
-        <div v-for="notification in notifications" :key="notification.id" :class="['admin-toast flex items-start gap-3 p-3 sm:p-4 rounded-xl sm:rounded-2xl border shadow-xl text-xs sm:text-sm', notification.type === 'error' ? 'bg-red-50 border-red-200 text-red-800' : 'bg-white border-emerald-200 text-ink-800']" role="status">
-          <CheckCircle2 v-if="notification.type !== 'error'" class="w-4 h-4 sm:w-5 sm:h-5 text-emerald-500 shrink-0 mt-0.5" />
-          <AlertCircle v-else class="w-4 h-4 sm:w-5 sm:h-5 text-red-500 shrink-0 mt-0.5" />
-          <p class="font-medium leading-5 flex-1">{{ notification.message }}</p>
-          <button type="button" class="text-current/50 hover:text-current" aria-label="Dismiss notification" @click="dismiss(notification.id)"><X class="w-3 h-3 sm:w-4 sm:h-4" /></button>
-        </div>
+        <article v-for="notification in notifications" :key="notification.id" :class="['admin-toast', notification.type === 'error' ? 'admin-toast--error' : 'admin-toast--success']" :role="notification.type === 'error' ? 'alert' : 'status'">
+          <span class="admin-toast__icon">
+            <AlertCircle v-if="notification.type === 'error'" class="h-5 w-5" />
+            <CheckCircle2 v-else class="h-5 w-5" />
+          </span>
+          <div class="min-w-0 flex-1">
+            <p class="admin-toast__title">{{ notification.type === 'error' ? 'Action needed' : 'Saved' }}</p>
+            <p class="admin-toast__message">{{ notification.message }}</p>
+          </div>
+          <button type="button" class="admin-toast__close" aria-label="Dismiss notification" @click="dismiss(notification.id)"><X class="h-4 w-4" /></button>
+          <span class="admin-toast__progress" :style="{ animationDuration: `${notification.duration}ms` }"></span>
+        </article>
       </transition-group>
     </div>
+
+    <Teleport to="body">
+      <div v-if="confirmation" class="admin-confirm-backdrop" @click.self="resolveConfirmation(false)">
+        <section class="admin-confirm" role="alertdialog" aria-modal="true" aria-labelledby="admin-confirm-title" aria-describedby="admin-confirm-message" tabindex="-1" @keydown.esc="resolveConfirmation(false)">
+          <div class="admin-confirm__icon"><AlertTriangle class="h-6 w-6" /></div>
+          <div>
+            <h2 id="admin-confirm-title" class="admin-confirm__title">{{ confirmation.title }}</h2>
+            <p id="admin-confirm-message" class="admin-confirm__message">{{ confirmation.message }}</p>
+          </div>
+          <div class="admin-confirm__actions">
+            <button type="button" class="admin-confirm__cancel" @click="resolveConfirmation(false)">Cancel</button>
+            <button type="button" class="admin-confirm__delete" @click="resolveConfirmation(true)"><Trash2 class="h-4 w-4" />{{ confirmation.confirmText }}</button>
+          </div>
+        </section>
+      </div>
+    </Teleport>
   </div>
 </template>
 
 <script setup>
+import 'vuetify/styles';
+import '@mdi/font/css/materialdesignicons.css';
 import { ref, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
-import { AlertCircle, BarChart3, Building2, CheckCircle2, CircleUserRound, ExternalLink, FolderTree, Globe, Inbox, LogOut, MessageSquareQuote, Package, X } from 'lucide-vue-next';
+import { AlertCircle, AlertTriangle, BarChart3, Building2, CheckCircle2, CircleUserRound, ExternalLink, FolderTree, Globe, Inbox, LogOut, MessageSquareQuote, Package, Trash2, X } from 'lucide-vue-next';
 import { useAdminAuth } from '../composables/useAdminAuth';
 import { useAdminNotifications } from '../composables/useAdminNotifications';
+import { useAdminConfirm } from '../composables/useAdminConfirm';
 
 const route = useRoute();
 const router = useRouter();
 const { user, logout } = useAdminAuth();
 const { notifications, dismiss } = useAdminNotifications();
+const { confirmation, resolveConfirmation } = useAdminConfirm();
 const sidebarOpen = ref(false);
 
 const navItems = [
@@ -233,39 +259,6 @@ onMounted(() => {
     width: min(18rem, 82vw);
   }
 
-  .admin-sidebar > div:first-child {
-    padding-left: 0.75rem;
-    padding-right: 0.75rem;
-    text-align: center;
-  }
-
-  .admin-sidebar > div:first-child .font-display {
-    font-size: 0;
-  }
-
-  .admin-sidebar > div:first-child .font-display::after {
-    content: 'AT';
-    font-family: 'Playfair Display', Georgia, serif;
-    font-size: 1.15rem;
-  }
-
-  .admin-sidebar > div:first-child p,
-  .admin-sidebar .admin-nav-label,
-  .admin-sidebar > div:last-child {
-    display: none;
-  }
-
-  .admin-sidebar nav {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-
-  .admin-sidebar nav a {
-    justify-content: center;
-    padding-left: 0.7rem;
-    padding-right: 0.7rem;
-  }
-
   .admin-shell table {
     min-width: 620px;
   }
@@ -279,6 +272,49 @@ onMounted(() => {
   background: linear-gradient(180deg, rgba(255,255,255,0), rgba(255,247,237,0.7));
 }
 
+.admin-toast {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  overflow: hidden;
+  border: 1px solid #e7e5e4;
+  border-radius: 0.75rem;
+  padding: 0.9rem 0.85rem 1rem;
+  background: rgba(255,255,255,0.98);
+  color: #292524;
+  box-shadow: 0 18px 45px -24px rgba(41, 37, 36, 0.45), 0 4px 12px rgba(41, 37, 36, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.admin-toast--success { border-left: 3px solid #059669; }
+.admin-toast--error { border-left: 3px solid #dc2626; }
+.admin-toast__icon { display: flex; flex: 0 0 auto; color: #059669; }
+.admin-toast--error .admin-toast__icon { color: #dc2626; }
+.admin-toast__title { margin: 0 0 0.15rem; font-size: 0.78rem; font-weight: 700; }
+.admin-toast__message { margin: 0; color: #57534e; font-size: 0.78rem; line-height: 1.45; overflow-wrap: anywhere; }
+.admin-toast__close { display: flex; flex: 0 0 auto; border-radius: 0.4rem; padding: 0.2rem; color: #78716c; transition: background 150ms, color 150ms; }
+.admin-toast__close:hover { background: #f5f5f4; color: #292524; }
+.admin-toast__progress { position: absolute; bottom: 0; left: 0; height: 2px; width: 100%; background: #059669; transform-origin: left; animation: toast-countdown linear forwards; }
+.admin-toast--error .admin-toast__progress { background: #dc2626; }
+
+.admin-confirm-backdrop { position: fixed; inset: 0; z-index: 120; display: grid; place-items: center; padding: 1rem; background: rgba(17, 24, 39, 0.48); backdrop-filter: blur(4px); }
+.admin-confirm { display: grid; grid-template-columns: auto 1fr; gap: 1rem; width: min(100%, 27rem); border: 1px solid rgba(231, 229, 228, 0.9); border-radius: 0.9rem; padding: 1.35rem; background: #fff; box-shadow: 0 28px 80px -32px rgba(15, 23, 42, 0.55); animation: confirm-enter 160ms ease-out both; }
+.admin-confirm__icon { display: grid; width: 2.7rem; height: 2.7rem; place-items: center; border-radius: 0.75rem; background: #fef2f2; color: #dc2626; }
+.admin-confirm__title { margin: 0.1rem 0 0.35rem; color: #1c1917; font-size: 1rem; font-weight: 700; }
+.admin-confirm__message { margin: 0; color: #57534e; font-size: 0.875rem; line-height: 1.5; overflow-wrap: anywhere; }
+.admin-confirm__actions { grid-column: 1 / -1; display: flex; justify-content: flex-end; gap: 0.65rem; padding-top: 0.5rem; }
+.admin-confirm__cancel, .admin-confirm__delete { display: inline-flex; min-height: 2.5rem; align-items: center; justify-content: center; gap: 0.45rem; border-radius: 0.6rem; padding: 0.55rem 0.9rem; font-size: 0.82rem; font-weight: 650; transition: background 150ms, transform 150ms; }
+.admin-confirm__cancel { border: 1px solid #e7e5e4; background: #fff; color: #44403c; }
+.admin-confirm__cancel:hover { background: #f5f5f4; }
+.admin-confirm__delete { background: #dc2626; color: #fff; }
+.admin-confirm__delete:hover { transform: translateY(-1px); background: #b91c1c; }
+.toast-enter-active, .toast-leave-active { transition: opacity 180ms ease, transform 180ms ease; }
+.toast-enter-from, .toast-leave-to { opacity: 0; transform: translateY(-8px) translateX(8px); }
+.toast-leave-active { position: absolute; right: 0; left: 0; }
+@keyframes toast-countdown { to { transform: scaleX(0); } }
+@keyframes confirm-enter { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
+
 @media (max-width: 375px) {
   .admin-shell main > div {
     padding-left: 0.6rem;
@@ -287,8 +323,8 @@ onMounted(() => {
 
   .admin-shell .admin-notifications {
     right: 0.5rem;
-    left: 0.5rem;
-    width: auto;
+    left: auto;
+    width: min(24rem, calc(100vw - 1rem));
   }
 }
 </style>

@@ -941,7 +941,7 @@ onMounted(async () => {
 }
 
 .table-shell {
-  overflow: hidden;
+  overflow-x: auto;
   border-radius: 1.3rem;
   border: 1px solid rgba(226,232,240,0.9);
 }

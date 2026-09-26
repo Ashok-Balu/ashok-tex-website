@@ -88,7 +88,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue';
+import { VDataTable } from 'vuetify/components';
 import { adminApi } from '../../services/api';
+import { useAdminConfirm } from '../../composables/useAdminConfirm';
+
+const { confirmAction } = useAdminConfirm();
 
 const tree = ref([]);
 const error = ref('');
@@ -186,7 +190,7 @@ async function toggleActive(row) {
 }
 
 async function remove(row) {
-  if (!confirm(`Delete category "${row.name}"?`)) return;
+  if (!await confirmAction(`Delete category "${row.name}"?`, { title: 'Delete this category?' })) return;
   try {
     await adminApi.categories.remove(row.id);
     tree.value = tree.value.filter((node) => node.id !== row.id).map((node) => ({ ...node, children: (node.children || []).filter((child) => child.id !== row.id) }));
