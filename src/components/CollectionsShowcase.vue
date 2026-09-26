@@ -12,7 +12,7 @@
         </router-link>
       </div>
 
-      <div class="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6">
         <router-link
           v-for="col in categories.slice(0, 6)"
           :key="col.id"
@@ -36,10 +36,10 @@
             </span>
           </div>
 
-          <div class="absolute inset-x-0 bottom-0 p-5 text-white sm:p-6">
-            <h3 class="mb-2 font-display text-2xl font-bold text-white transition-colors group-hover:text-brand-300">{{ col.name }}</h3>
-            <p class="mb-4 line-clamp-2 text-sm leading-relaxed text-white/75">{{ col.description }}</p>
-            <span class="inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-brand-300 transition-colors group-hover:text-white">
+          <div class="absolute inset-x-0 bottom-0 p-3 text-white sm:p-6">
+            <h3 class="mb-2 font-display text-lg font-bold leading-tight text-white transition-colors group-hover:text-brand-300 sm:text-2xl sm:leading-normal">{{ col.name }}</h3>
+            <p class="mb-3 line-clamp-2 text-xs leading-relaxed text-white/75 sm:mb-4 sm:text-sm">{{ col.description }}</p>
+            <span class="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-brand-300 transition-colors group-hover:text-white sm:text-xs">
               Explore Range
               <svg class="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
             </span>

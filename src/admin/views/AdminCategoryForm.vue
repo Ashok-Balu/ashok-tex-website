@@ -38,7 +38,12 @@
       <div>
         <label class="block text-sm font-medium text-ink-700 mb-1.5">Image URL</label>
         <input v-model="form.image" class="input-field text-base" placeholder="https://..." />
-        <input type="file" accept="image/*" class="mt-2 text-xs w-full" @change="(e) => uploadImage(e, 'image')" />
+        <div class="mt-2 flex flex-wrap items-center gap-3">
+          <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="text-xs" @change="(e) => uploadImage(e, 'image')" />
+          <span class="text-xs text-ink-500">Maximum file size: {{ maxImageSize }} per image.</span>
+          <button v-if="form.image" type="button" class="text-xs font-medium text-red-600 hover:text-red-700" @click="form.image = ''">Remove image</button>
+        </div>
+        <img v-if="form.image" :src="form.image" alt="Category image preview" class="mt-3 h-32 w-48 rounded-xl border border-surface-200 object-cover" />
       </div>
 
       <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -83,12 +88,14 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { adminApi } from '../../services/api';
+import { MAX_IMAGE_SIZE_LABEL } from '../../utils/imageUpload';
 
 const route = useRoute();
 const router = useRouter();
 const isEdit = computed(() => !!route.params.id);
 const currentId = computed(() => Number(route.params.id));
 const formError = ref('');
+const maxImageSize = MAX_IMAGE_SIZE_LABEL;
 const tree = ref([]);
 const form = ref(emptyForm());
 
@@ -155,8 +162,15 @@ async function save() {
 async function uploadImage(event, field) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
-  const res = await adminApi.upload(files);
-  form.value[field] = res.data[0].url;
+  formError.value = '';
+  try {
+    const res = await adminApi.upload(files);
+    form.value[field] = res.data[0].url;
+  } catch (error) {
+    formError.value = error.message || 'Image upload failed.';
+  } finally {
+    event.target.value = '';
+  }
 }
 
 onMounted(async () => {

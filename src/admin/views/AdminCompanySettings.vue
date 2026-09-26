@@ -1,5 +1,6 @@
 <template>
   <div class="space-y-6 pb-8">
+    <p v-if="uploadError" class="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-700">{{ uploadError }}</p>
     <header class="relative overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-ink-950 via-ink-900 to-brand-900 px-4 py-5 text-white shadow-card sm:px-6 sm:py-7">
       <div class="absolute inset-0 bg-dot-pattern opacity-20"></div>
       <div class="absolute -right-16 -top-20 h-56 w-56 rounded-full border border-white/10"></div>
@@ -202,11 +203,14 @@
                 <label class="block text-sm font-medium text-ink-700 mb-1.5">Image URL</label>
                 <div class="flex flex-col gap-2 sm:flex-row">
                   <input v-model="member.image" class="input-field flex-1 text-base" placeholder="https://example.com/photo.jpg" />
-                  <input :ref="(el) => setMemberInputRef(el, index)" type="file" accept="image/*" class="hidden" @change="handleMemberFileChange($event, index)" />
+                  <input :ref="(el) => setMemberInputRef(el, index)" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" @change="handleMemberFileChange($event, index)" />
                   <button type="button" @click="triggerMemberInput(index)" :disabled="uploadingMemberIndex === index" class="inline-flex items-center justify-center rounded-xl border border-surface-300 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-brand-300 hover:text-brand-700 disabled:opacity-60">
                     {{ uploadingMemberIndex === index ? 'Uploading...' : 'Upload' }}
                   </button>
+                  <button v-if="member.image" type="button" @click="member.image = ''" class="inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">Remove image</button>
                 </div>
+                <p class="mt-1 text-xs text-ink-500">Maximum file size: {{ maxImageSize }} per image.</p>
+                <img v-if="member.image" :src="member.image" :alt="`${member.name || 'Member'} photo preview`" class="mt-3 h-24 w-24 rounded-xl border border-surface-200 object-cover" />
               </div>
             </div>
           </div>
@@ -226,11 +230,14 @@
             <label class="block text-sm font-medium text-ink-700 mb-1.5">Image URL</label>
             <div class="flex flex-col gap-2 sm:flex-row">
               <input v-model="form.legacyImage" class="input-field flex-1 text-base" placeholder="https://example.com/legacy-factory.jpg" />
-              <input ref="legacyImageInput" type="file" accept="image/*" class="hidden" @change="handleLegacyImageFileChange" />
+              <input ref="legacyImageInput" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" @change="handleLegacyImageFileChange" />
               <button type="button" @click="triggerLegacyImageInput" :disabled="uploadingLegacyImage" class="inline-flex items-center justify-center rounded-xl border border-surface-300 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-brand-300 hover:text-brand-700 disabled:opacity-60">
                 {{ uploadingLegacyImage ? 'Uploading...' : 'Upload' }}
               </button>
+              <button v-if="form.legacyImage" type="button" @click="form.legacyImage = ''" class="inline-flex items-center justify-center rounded-xl border border-red-200 bg-white px-3 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50">Remove image</button>
             </div>
+            <p class="mt-1 text-xs text-ink-500">Maximum file size: {{ maxImageSize }} per image.</p>
+            <img v-if="form.legacyImage" :src="form.legacyImage" alt="Legacy facility image preview" class="mt-3 h-32 w-48 rounded-xl border border-surface-200 object-cover" />
           </div>
           <div>
             <label class="block text-sm font-medium text-ink-700 mb-1.5">Alt Text / Caption</label>
@@ -249,25 +256,31 @@
             </div>
           </div>
           <div class="flex gap-2">
-            <input ref="bulkGalleryInput" type="file" multiple accept="image/*" class="hidden" @change="handleBulkGalleryUpload" />
+            <input ref="bulkGalleryInput" type="file" multiple accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" @change="handleBulkGalleryUpload" />
             <button type="button" @click="triggerBulkGalleryInput" :disabled="uploadingBulkGallery" class="inline-flex items-center justify-center rounded-xl bg-brand-100 px-3 py-2 text-xs font-semibold text-brand-700 transition hover:bg-brand-200 disabled:opacity-60">
               {{ uploadingBulkGallery ? 'Uploading...' : 'Add photo' }}
             </button>
           </div>
         </div>
+        <p class="-mt-2 text-xs text-ink-500">Maximum file size: {{ maxImageSize }} per image.</p>
 
         <div class="space-y-4">
           <div v-for="(image, index) in form.aboutGallery" :key="`gallery-${index}`" class="rounded-2xl border border-surface-200 bg-surface-50 p-4 sm:p-5">
             <div class="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p class="text-sm font-semibold text-ink-900">Photo {{ index + 1 }}</p>
-              <button type="button" @click="removeGalleryImage(index)" class="text-xs font-medium text-red-600 transition hover:text-red-700">Remove</button>
+              <div class="flex gap-3">
+                <button type="button" :disabled="index === 0" class="text-xs font-medium text-ink-600 transition hover:text-ink-900 disabled:opacity-40" :aria-label="`Move photo ${index + 1} earlier`" @click="moveGalleryImage(index, -1)">Move up</button>
+                <button type="button" :disabled="index === form.aboutGallery.length - 1" class="text-xs font-medium text-ink-600 transition hover:text-ink-900 disabled:opacity-40" :aria-label="`Move photo ${index + 1} later`" @click="moveGalleryImage(index, 1)">Move down</button>
+                <button type="button" @click="removeGalleryImage(index)" class="text-xs font-medium text-red-600 transition hover:text-red-700">Remove photo</button>
+              </div>
             </div>
+            <img v-if="image.url" :src="image.url" alt="About gallery image preview" class="mb-4 h-36 w-full rounded-xl border border-surface-200 object-cover sm:w-64" />
             <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <div class="sm:col-span-2">
                 <label class="block text-sm font-medium text-ink-700 mb-1.5">Image URL</label>
                 <div class="flex flex-col gap-2 sm:flex-row">
                   <input v-model="image.url" class="input-field flex-1 text-base" placeholder="https://example.com/factory.jpg" />
-                  <input :ref="(el) => setGalleryInputRef(el, index)" type="file" accept="image/*" class="hidden" @change="handleGalleryFileChange($event, index)" />
+                  <input :ref="(el) => setGalleryInputRef(el, index)" type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" @change="handleGalleryFileChange($event, index)" />
                   <button type="button" @click="triggerGalleryInput(index)" :disabled="uploadingGalleryIndex === index" class="inline-flex items-center justify-center rounded-xl border border-surface-300 bg-white px-3 py-2 text-xs font-semibold text-ink-700 transition hover:border-brand-300 hover:text-brand-700 disabled:opacity-60">
                     {{ uploadingGalleryIndex === index ? 'Uploading...' : 'Upload' }}
                   </button>
@@ -294,8 +307,11 @@ import { ref, onMounted } from 'vue';
 import { adminApi } from '../../services/api';
 import { digitsOnly } from '../../utils/phone';
 import { useCompany } from '../../composables/useCompany';
+import { MAX_IMAGE_SIZE_LABEL } from '../../utils/imageUpload';
 
 const saved = ref(false);
+const uploadError = ref('');
+const maxImageSize = MAX_IMAGE_SIZE_LABEL;
 const form = ref({ address: {}, managementMembers: [], aboutGallery: [], legacyImage: '', legacyImageCaption: '' });
 const uploadingMemberIndex = ref(null);
 const uploadingGalleryIndex = ref(null);
@@ -333,9 +349,14 @@ function triggerBulkGalleryInput() {
 
 async function uploadSingleFile(file, onSuccess) {
   if (!file) return;
-  const res = await adminApi.upload([file]);
-  const uploadedUrl = res?.data?.[0]?.url;
-  if (uploadedUrl) onSuccess(uploadedUrl);
+  uploadError.value = '';
+  try {
+    const res = await adminApi.upload([file]);
+    const uploadedUrl = res?.data?.[0]?.url;
+    if (uploadedUrl) onSuccess(uploadedUrl);
+  } catch (error) {
+    uploadError.value = error.message || 'Image upload failed.';
+  }
 }
 
 async function handleMemberFileChange(event, index) {
@@ -378,6 +399,7 @@ async function handleBulkGalleryUpload(event) {
   const files = Array.from(event.target.files || []);
   if (!files.length) return;
   uploadingBulkGallery.value = true;
+  uploadError.value = '';
   try {
     const BATCH_SIZE = 5;
     const batches = [];
@@ -391,6 +413,8 @@ async function handleBulkGalleryUpload(event) {
         form.value.aboutGallery.push({ url: uploadedFile.url, caption: '' });
       }
     }
+  } catch (error) {
+    uploadError.value = error.message || 'Image upload failed.';
   } finally {
     uploadingBulkGallery.value = false;
     event.target.value = '';
@@ -444,6 +468,13 @@ function addGalleryImage() {
 
 function removeGalleryImage(index) {
   form.value.aboutGallery.splice(index, 1);
+}
+
+function moveGalleryImage(index, direction) {
+  const targetIndex = index + direction;
+  if (targetIndex < 0 || targetIndex >= form.value.aboutGallery.length) return;
+  const gallery = form.value.aboutGallery;
+  [gallery[index], gallery[targetIndex]] = [gallery[targetIndex], gallery[index]];
 }
 
 async function load() {

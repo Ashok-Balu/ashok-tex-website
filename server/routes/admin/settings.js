@@ -4,6 +4,7 @@ import {
   getCompanySettings, updateCompanySettings, getAllNavigationItems, createNavigationItem,
   updateNavigationItem, deleteNavigationItem, reorderNavigationItems,
   getHomepageSections, updateHomepageSection,
+  getProductSpecificationOptions, addProductSpecificationOption, deleteProductSpecificationOption,
 } from '../../db/repositories/settingsRepo.js';
 
 const router = express.Router();
@@ -44,6 +45,51 @@ router.put('/company', async (req, res) => {
   } catch (error) {
     console.error('[Admin Company Settings Update Error]', error.message);
     res.status(500).json({ success: false, message: 'Failed to update company settings.' });
+  }
+});
+
+const specificationFields = new Set([
+  'Business Type', 'Material', 'Pattern', 'Technics', 'Wash Type',
+  'Usage / Application', 'Country of Origin',
+]);
+
+router.get('/specification-options', async (req, res) => {
+  try {
+    const data = await getProductSpecificationOptions();
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('[Admin Specification Options Error]', error.message);
+    res.status(500).json({ success: false, message: 'Failed to fetch specification options.' });
+  }
+});
+
+router.post('/specification-options', async (req, res) => {
+  try {
+    const field = String(req.body.field || '').trim();
+    const value = String(req.body.value || '').trim();
+    if (!specificationFields.has(field) || !value || value.length > 100) {
+      return res.status(400).json({ success: false, message: 'A valid specification field and option (up to 100 characters) are required.' });
+    }
+    const data = await addProductSpecificationOption(field, value);
+    res.status(201).json({ success: true, data });
+  } catch (error) {
+    console.error('[Admin Specification Option Create Error]', error.message);
+    res.status(500).json({ success: false, message: 'Failed to save specification option.' });
+  }
+});
+
+router.delete('/specification-options', async (req, res) => {
+  try {
+    const field = String(req.body.field || '').trim();
+    const value = String(req.body.value || '').trim();
+    if (!specificationFields.has(field) || !value) {
+      return res.status(400).json({ success: false, message: 'A valid specification field and option are required.' });
+    }
+    const data = await deleteProductSpecificationOption(field, value);
+    res.json({ success: true, data });
+  } catch (error) {
+    console.error('[Admin Specification Option Delete Error]', error.message);
+    res.status(500).json({ success: false, message: 'Failed to delete specification option.' });
   }
 });
 

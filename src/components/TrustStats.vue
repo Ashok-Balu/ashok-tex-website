@@ -6,13 +6,13 @@
         <h2 class="section-title">{{ title }}</h2>
       </div>
       <div class="grid grid-cols-2 gap-5 lg:grid-cols-4 lg:gap-6">
-        <div v-for="stat in stats" :key="stat.label" class="flex items-center gap-4 rounded-[1.5rem] border border-[#f0dfc1] bg-white/80 p-5 shadow-[0_20px_40px_-30px_rgba(48,31,18,0.35)] backdrop-blur-sm">
-          <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl" :class="stat.iconBg">
-            <svg class="h-6 w-6" :class="stat.iconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="stat.icon"/></svg>
+        <div v-for="stat in stats" :key="stat.label" class="flex flex-col items-start gap-3 rounded-[1.5rem] border border-[#f0dfc1] bg-white/80 p-4 shadow-[0_20px_40px_-30px_rgba(48,31,18,0.35)] backdrop-blur-sm sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+          <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl sm:h-12 sm:w-12" :class="stat.iconBg">
+            <svg class="h-5 w-5 sm:h-6 sm:w-6" :class="stat.iconColor" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="stat.icon"/></svg>
           </div>
-          <div>
-            <p class="font-display text-2xl font-bold leading-none text-ink-900">{{ stat.value }}</p>
-            <p class="mt-1 text-xs font-medium text-ink-500">{{ stat.label }}</p>
+          <div class="w-full min-w-0 sm:w-auto">
+            <p class="font-display text-xl font-bold leading-none text-ink-900 sm:text-2xl">{{ stat.value }}</p>
+            <p class="mt-1 break-words text-[11px] font-medium leading-snug text-ink-500 sm:text-xs">{{ stat.label }}</p>
           </div>
         </div>
       </div>

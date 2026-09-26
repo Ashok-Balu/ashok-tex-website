@@ -142,7 +142,11 @@
 
 <script setup>
 import { computed, ref, onBeforeUnmount, onMounted } from 'vue';
+import { VBtn, VDataTable, VIcon, VSelect, VTextField } from 'vuetify/components';
 import { adminApi } from '../../services/api';
+import { useAdminConfirm } from '../../composables/useAdminConfirm';
+
+const { confirmAction } = useAdminConfirm();
 
 const products = ref([]);
 const pagination = ref({ total: 0, page: 1, totalPages: 1 });
@@ -231,7 +235,7 @@ async function duplicateProduct(id) {
 }
 
 async function removeProduct(id, name) {
-  if (!confirm(`Delete product "${name}"?`)) return;
+  if (!await confirmAction(`Delete product "${name}"?`, { title: 'Delete this product?' })) return;
   busyProductId.value = id;
   try {
     await adminApi.products.remove(id);

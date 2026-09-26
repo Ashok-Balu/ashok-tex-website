@@ -1,6 +1,7 @@
 import multer from 'multer';
 import path from 'path';
 import crypto from 'crypto';
+import { MAX_IMAGE_FILES, MAX_IMAGE_SIZE_BYTES } from '../../shared/imageUploadLimits.js';
 
 const ALLOWED_MIME = new Set(['image/jpeg', 'image/png', 'image/webp', 'image/gif']);
 const ALLOWED_EXT = new Set(['.jpg', '.jpeg', '.png', '.webp', '.gif']);
@@ -15,7 +16,7 @@ function fileFilter(req, file, cb) {
 export const upload = multer({
   storage: multer.memoryStorage(),
   fileFilter,
-  limits: { fileSize: 25 * 1024 * 1024, files: 20 },
+  limits: { fileSize: MAX_IMAGE_SIZE_BYTES, files: MAX_IMAGE_FILES },
 });
 
 export function createStorageFilename(originalname) {
