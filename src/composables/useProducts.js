@@ -95,7 +95,14 @@ export function useFeaturedProducts(limit = 6) {
   const products = ref([]);
   const loading = ref(true);
   api.products.list({ featured: true, limit, sort: 'featured' })
-    .then((res) => { products.value = res.data; })
+    .then(async (res) => {
+      if (res.data?.length) {
+        products.value = res.data;
+        return;
+      }
+      const fallback = await api.products.list({ limit, sort: 'featured' });
+      products.value = Array.isArray(fallback.data) ? fallback.data : [];
+    })
     .catch(() => { products.value = []; })
     .finally(() => { loading.value = false; });
   return { products, loading };

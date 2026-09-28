@@ -10,8 +10,6 @@
       :subtitle="sectionMap[key]?.subtitle"
     />
 
-    <FabricTextureShowcase />
-
     <!-- Contact Strip -->
     <section class="py-12 bg-ink-900">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -42,7 +40,6 @@ import CollectionsShowcase from '../components/CollectionsShowcase.vue';
 import FeaturedProductsSection from '../components/FeaturedProductsSection.vue';
 import AboutSnippetSection from '../components/AboutSnippetSection.vue';
 import TestimonialsSection from '../components/TestimonialsSection.vue';
-import FabricTextureShowcase from '../components/FabricTextureShowcase.vue';
 
 // Maps each admin-configurable homepage_sections.section_key to the component that renders it.
 // 'hero' is handled separately above since it's always the page header.
