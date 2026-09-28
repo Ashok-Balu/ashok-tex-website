@@ -3,12 +3,22 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
       <!-- Header -->
-      <div class="py-12 border-b border-surface-100 mb-12">
-        <Breadcrumb :items="[{ name: 'Collections' }]" />
-        <div class="mt-6 max-w-2xl">
-          <p class="section-label">Curated Fabric Catalogue</p>
-          <h1 class="font-display text-4xl sm:text-5xl font-bold text-ink-900 mb-3">Our Fabric Collections</h1>
-          <p class="text-base text-ink-600 leading-relaxed">Explore our core fabric classifications: pure cottons, dimensional woven structures, and sustainable recycled textiles.</p>
+      <div class="relative isolate mb-14 overflow-hidden rounded-[2rem] border border-[#e8dccb] bg-gradient-to-br from-[#f7ead8] via-[#fffdf8] to-[#e7eee4] px-6 py-8 text-ink-900 shadow-float sm:px-10 sm:py-12">
+        <div class="absolute -right-20 -top-24 h-72 w-72 rounded-full border border-brand-300/30"></div>
+        <div class="absolute -bottom-28 right-24 h-56 w-56 rounded-full border border-amber-300/25"></div>
+        <div class="relative z-10">
+          <Breadcrumb :items="[{ name: 'Collections' }]" class="[&_a]:text-ink-500 [&_a:hover]:text-brand-700 [&_span]:text-ink-900" />
+          <div class="mt-8 max-w-3xl">
+            <p class="text-xs font-semibold uppercase tracking-[0.24em] text-[#9a5b2d]">Curated fabric catalogue</p>
+            <h1 class="mt-3 font-display text-4xl font-bold leading-tight text-ink-950 sm:text-6xl">Materials with a point of view.</h1>
+            <p class="mt-4 max-w-2xl text-base leading-relaxed text-ink-600 sm:text-lg">Explore pure cottons, dimensional woven structures, and sustainable recycled textiles made for considered commercial production.</p>
+          </div>
+          <div class="mt-8 flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-ink-600">
+            <span class="rounded-full border border-brand-200 bg-white/75 px-3 py-2">{{ categories.length }} collections</span>
+            <span class="rounded-full border border-brand-200 bg-white/75 px-3 py-2">Karur, Tamil Nadu</span>
+            <span class="rounded-full border border-brand-200 bg-white/75 px-3 py-2">Manufacturer</span>
+            <span class="rounded-full border border-[#c8d8c7] bg-[#e8f0e5] px-3 py-2 text-[#41634b]">Direct supply</span>
+          </div>
         </div>
       </div>
 
@@ -31,7 +41,7 @@
               class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]"
               :style="{ backgroundColor: `${col.accentColor || '#1a6b3a'}22`, color: col.accentColor || '#1a6b3a' }"
             >
-              {{ col.productCount }} Fabrics
+              {{ col.productCount }} {{ col.productCount === 1 ? 'Product' : 'Products' }}
             </span>
             <h2 class="font-display text-3xl sm:text-4xl font-bold text-ink-900">{{ col.name }}</h2>
             <p class="text-base text-ink-600 leading-relaxed">{{ col.description }}</p>

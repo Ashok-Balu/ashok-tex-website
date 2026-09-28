@@ -14,48 +14,29 @@
       </select>
     </div>
 
-    <!-- Desktop Table View -->
-    <div class="hidden md:block bg-white rounded-2xl border border-surface-200 overflow-hidden">
-      <table class="w-full text-sm">
-        <thead class="bg-surface-50 text-ink-500 text-left sticky top-0">
-          <tr>
-            <th class="px-4 py-3 font-medium">Name</th>
-            <th class="px-4 py-3 font-medium">Category</th>
-            <th class="px-4 py-3 font-medium">Price</th>
-            <th class="px-4 py-3 font-medium">Published</th>
-            <th class="px-4 py-3 font-medium">Featured</th>
-            <th class="px-4 py-3 font-medium text-right">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-surface-100">
-          <tr v-for="p in products" :key="p.id">
-            <td class="px-4 py-3 text-ink-800 font-medium">{{ p.name }}</td>
-            <td class="px-4 py-3 text-ink-500">{{ p.category?.name || '—' }}</td>
-            <td class="px-4 py-3 text-ink-500">{{ p.price_min ? `₹${p.price_min}–₹${p.price_max}` : '—' }}</td>
-            <td class="px-4 py-3">
-              <button :class="['px-2 py-0.5 rounded-lg text-xs font-semibold', p.published ? 'bg-green-100 text-green-700' : 'bg-surface-200 text-ink-500']" @click="togglePublish(p)">{{ p.published ? 'Published' : 'Draft' }}</button>
-            </td>
-            <td class="px-4 py-3">
-              <button :class="['px-2 py-0.5 rounded-lg text-xs font-semibold', p.featured ? 'bg-brand-100 text-brand-700' : 'bg-surface-200 text-ink-500']" @click="toggleFeatured(p)">{{ p.featured ? 'Featured' : '—' }}</button>
-            </td>
-            <td class="px-4 py-3 text-right space-x-2 whitespace-nowrap">
-              <router-link :to="`/admin/products/${p.id}/edit`" class="text-brand-600 hover:underline text-xs font-semibold">Edit</router-link>
-              <button class="text-ink-500 hover:underline text-xs font-semibold" @click="duplicate(p)">Duplicate</button>
-              <button class="text-red-600 hover:underline text-xs font-semibold" @click="remove(p)">Delete</button>
-            </td>
-          </tr>
-          <tr v-if="products.length === 0"><td colspan="6" class="px-4 py-8 text-center text-ink-400">No products found.</td></tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Mobile Card View -->
-    <div class="md:hidden space-y-3">
-      <div v-for="p in products" :key="p.id" class="bg-white rounded-xl border border-slate-200 p-4 space-y-3">
-        <div class="flex items-start justify-between gap-2">
-          <div class="flex-1 min-w-0">
-            <p class="font-semibold text-ink-900 truncate">{{ p.name }}</p>
-            <p class="text-xs text-ink-500 mt-1">{{ p.category?.name || '—' }}</p>
+    <div class="table-shell">
+      <v-data-table
+        :headers="headers"
+        :items="filteredProducts"
+        :group-by="[{ key: 'categoryName', order: 'asc' }]"
+        :items-per-page="10"
+        :items-per-page-options="[10, 25, 50]"
+        :loading="isLoading"
+        item-value="id"
+        class="vuetify-table"
+        density="comfortable"
+        hover
+        multi-sort
+        loading-text="Loading products..."
+        items-per-page-text="Products per page"
+      >
+        <template #top>
+          <div class="table-heading">
+            <div>
+              <h2>Product catalogue</h2>
+                <p>{{ filteredProducts.length }} {{ filteredProducts.length === 1 ? 'product' : 'products' }} shown</p>
+            </div>
+            <span class="table-hint">Click a column heading to sort</span>
           </div>
           <button :class="['px-2 py-1 rounded-lg text-xs font-semibold whitespace-nowrap', p.published ? 'bg-green-100 text-green-700' : 'bg-surface-200 text-ink-500']" @click="togglePublish(p)">{{ p.published ? 'Published' : 'Draft' }}</button>
         </div>
