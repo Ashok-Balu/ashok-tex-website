@@ -1,6 +1,7 @@
 const API_BASE = '/api';
 import { ref } from 'vue';
 import { useAdminNotifications } from '../composables/useAdminNotifications';
+import { validateImageFiles } from '../utils/imageUpload';
 
 const requestCache = new Map();
 const activeRequests = new Map();
@@ -11,9 +12,30 @@ let pendingApiRequests = 0;
 
 export function invalidateApiCache(prefix = '') {
   if (!prefix) return;
+  const prefixes = Array.isArray(prefix) ? prefix : [prefix];
   for (const key of requestCache.keys()) {
-    if (key.includes(prefix)) requestCache.delete(key);
+    if (prefixes.some((item) => key.includes(item))) requestCache.delete(key);
   }
+}
+
+function invalidateRelatedApiCache(path = '') {
+  const prefixes = ['/admin', '/products', '/categories', '/testimonials', '/settings', '/enquiries'];
+  const normalizedPath = String(path || '');
+
+  if (!normalizedPath) {
+    invalidateApiCache(prefixes);
+    return;
+  }
+
+  const triggered = new Set();
+  if (normalizedPath.includes('/admin')) triggered.add('/admin');
+  if (normalizedPath.includes('/products')) triggered.add('/products');
+  if (normalizedPath.includes('/categories')) triggered.add('/categories');
+  if (normalizedPath.includes('/testimonials')) triggered.add('/testimonials');
+  if (normalizedPath.includes('/settings')) triggered.add('/settings');
+  if (normalizedPath.includes('/enquiries')) triggered.add('/enquiries');
+
+  if (triggered.size) invalidateApiCache([...triggered]);
 }
 
 function beginApiRequest() {
@@ -101,7 +123,9 @@ async function request(path, { method = 'GET', body, auth = false, isFormData = 
       }
       if (auth && method !== 'GET') notify('Changes saved successfully.');
       if (cache && method === 'GET') requestCache.set(cacheKey, { createdAt: Date.now(), data: json });
-      if (method !== 'GET' && auth) invalidateApiCache('/admin');
+      if (method !== 'GET') {
+        invalidateRelatedApiCache(path);
+      }
       return json;
     } finally {
       if (cache && method === 'GET') activeRequests.delete(cacheKey);
@@ -188,6 +212,9 @@ export const adminApi = {
   settings: {
     company: () => request('/admin/settings/company', { auth: true }),
     updateCompany: (data) => request('/admin/settings/company', { method: 'PUT', body: data, auth: true }),
+    specificationOptions: () => request('/admin/settings/specification-options', { auth: true }),
+    addSpecificationOption: (field, value) => request('/admin/settings/specification-options', { method: 'POST', body: { field, value }, auth: true }),
+    deleteSpecificationOption: (field, value) => request('/admin/settings/specification-options', { method: 'DELETE', body: { field, value }, auth: true }),
     navigation: () => request('/admin/settings/navigation', { auth: true }),
     createNavItem: (data) => request('/admin/settings/navigation', { method: 'POST', body: data, auth: true }),
     updateNavItem: (id, data) => request(`/admin/settings/navigation/${id}`, { method: 'PUT', body: data, auth: true }),
@@ -197,6 +224,7 @@ export const adminApi = {
     updateHomepageSection: (key, data) => request(`/admin/settings/homepage-sections/${key}`, { method: 'PUT', body: data, auth: true }),
   },
   upload: (files) => {
+    validateImageFiles(files);
     const formData = new FormData();
     files.forEach((file) => formData.append('images', file));
     return request('/admin/upload', { method: 'POST', body: formData, auth: true, isFormData: true });

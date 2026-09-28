@@ -1,5 +1,5 @@
 <template>
-  <div class="pt-20 pb-16 bg-white">
+  <div class="collections-page pt-20 pb-16 bg-gradient-to-b from-[#fffdf8] via-[#fffaf2] to-[#f4f1e8]">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 
       <!-- Header -->
@@ -28,15 +28,17 @@
         <div
           v-for="(col, index) in categories"
           :key="col.id"
-          class="bg-white rounded-3xl border border-surface-200 overflow-hidden shadow-card hover:shadow-card-hover transition-all duration-300 grid grid-cols-1 lg:grid-cols-2 items-stretch"
+          class="group relative bg-white rounded-[2rem] border border-surface-200 overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 grid grid-cols-1 lg:grid-cols-2 items-stretch"
         >
           <!-- Image -->
-          <div :class="['aspect-[4/3] lg:aspect-auto overflow-hidden bg-surface-100', index % 2 === 1 ? 'lg:order-2' : '']">
-            <img :src="col.image" :alt="col.name" class="w-full h-full object-cover" loading="lazy" />
+          <div :class="['relative min-h-72 aspect-[4/3] lg:aspect-auto overflow-hidden bg-surface-100', index % 2 === 1 ? 'lg:order-2' : '']">
+            <img :src="col.image" :alt="col.name" class="h-full w-full object-cover transition duration-700 group-hover:scale-105" loading="lazy" />
+            <div class="absolute inset-0 bg-gradient-to-t from-ink-950/55 via-transparent to-transparent"></div>
+            <span class="absolute bottom-5 left-5 rounded-full border border-white/30 bg-ink-950/45 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-white backdrop-blur-sm">0{{ index + 1 }} / Collection</span>
           </div>
 
           <!-- Content -->
-          <div :class="['p-8 sm:p-12 flex flex-col justify-center space-y-5', index % 2 === 1 ? 'lg:order-1' : '']">
+          <div :class="['flex flex-col justify-center space-y-5 p-8 sm:p-12', index % 2 === 1 ? 'lg:order-1' : '']">
             <span
               class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]"
               :style="{ backgroundColor: `${col.accentColor || '#1a6b3a'}22`, color: col.accentColor || '#1a6b3a' }"

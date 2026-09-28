@@ -3,7 +3,7 @@
     <h1 class="font-display text-2xl font-bold text-ink-900 mb-6">Social & SEO</h1>
     <p v-if="saved" class="p-3 mb-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-700">Social and SEO settings saved.</p>
 
-    <form class="space-y-6" @submit.prevent="save">
+    <v-form class="space-y-6" @submit.prevent="save">
       <section class="bg-white rounded-2xl border border-surface-200 p-6 space-y-4">
         <h2 class="text-sm font-semibold text-ink-900 uppercase tracking-wide">Social Links</h2>
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -41,7 +41,7 @@
       </section>
 
       <button type="submit" class="px-6 py-3 bg-brand-500 hover:bg-brand-600 text-white font-semibold rounded-xl text-sm">Save Social & SEO</button>
-    </form>
+    </v-form>
   </div>
 </template>
 

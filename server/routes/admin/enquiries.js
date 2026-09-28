@@ -82,11 +82,13 @@ router.put('/contacts/:id/status', async (req, res) => {
   const { status } = req.body;
   const updated = await updateContactStatus(req.params.id, status);
   if (!updated) return res.status(400).json({ success: false, message: 'Invalid status or message not found.' });
+  contactCache = { data: null, timestamp: 0 };
   res.json({ success: true, data: updated });
 });
 
 router.delete('/contacts/:id', async (req, res) => {
   await deleteContact(req.params.id);
+  contactCache = { data: null, timestamp: 0 };
   res.json({ success: true });
 });
 
@@ -94,11 +96,13 @@ router.put('/:id/status', async (req, res) => {
   const { status } = req.body;
   const updated = await updateEnquiryStatus(req.params.id, status);
   if (!updated) return res.status(400).json({ success: false, message: 'Invalid status or enquiry not found.' });
+  enquiryCache = { data: null, timestamp: 0 };
   res.json({ success: true, data: updated });
 });
 
 router.delete('/:id', async (req, res) => {
   await deleteEnquiry(req.params.id);
+  enquiryCache = { data: null, timestamp: 0 };
   res.json({ success: true });
 });
 
