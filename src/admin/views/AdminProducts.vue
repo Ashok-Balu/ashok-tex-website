@@ -74,6 +74,7 @@
         :headers="headers"
         :items="filteredProducts"
         :group-by="[{ key: 'categoryName', order: 'asc' }]"
+        page-by="group"
         :items-per-page="10"
         :items-per-page-options="[10, 25, 50]"
         :loading="isLoading"
@@ -83,7 +84,7 @@
         hover
         multi-sort
         loading-text="Loading products..."
-        items-per-page-text="Products per page"
+        items-per-page-text="Categories per page"
       >
         <template #top>
           <div class="table-heading">
@@ -95,18 +96,34 @@
           </div>
         </template>
 
+        <template #group-header="{ item, columns, toggleGroup, isGroupOpen }">
+          <tr class="product-group-row">
+            <td v-for="(column, index) in columns" :key="column.key || index">
+              <button
+                v-if="column.key === 'name'"
+                class="product-group-toggle"
+                type="button"
+                :aria-expanded="isGroupOpen(item)"
+                :aria-label="`${isGroupOpen(item) ? 'Collapse' : 'Expand'} ${item.value} group`"
+                @click="toggleGroup(item)"
+              >
+                <v-icon class="product-group-chevron" :icon="isGroupOpen(item) ? 'mdi-chevron-down' : 'mdi-chevron-right'" size="19" aria-hidden="true" />
+                <span class="product-group-label">{{ item.value }}</span>
+                <span class="product-group-count">{{ item.items.length }}</span>
+              </button>
+            </td>
+          </tr>
+        </template>
+
         <template v-slot:[`item.name`]="{ item }">
-          <div class="table-name-cell">
+          <div class="table-name-cell table-name-cell--child">
+            <v-icon class="product-branch" icon="mdi-subdirectory-arrow-right" size="16" aria-hidden="true" />
             <div class="table-name-badge">P</div>
             <div class="table-name-copy">
               <span class="font-semibold text-ink-800">{{ item.name }}</span>
               <small>Product #{{ item.id }}</small>
             </div>
           </div>
-        </template>
-
-        <template v-slot:[`item.categoryName`]="{ item }">
-          <span class="text-ink-500">{{ item.categoryName }}</span>
         </template>
 
         <template v-slot:[`item.publishedText`]="{ item }">
@@ -167,7 +184,6 @@ const statusOptions = [
 
 const headers = [
   { title: 'Name', key: 'name', sortable: true },
-  { title: 'Category', key: 'categoryName', sortable: true },
   { title: 'Published', key: 'publishedText', sortable: true },
   { title: 'Featured', key: 'featuredText', sortable: true },
   { title: 'Actions', key: 'actions', sortable: false, align: 'end' },
@@ -572,6 +588,75 @@ onBeforeUnmount(() => {
 
 :deep(.v-data-table__tr:hover) {
   background: rgba(255, 247, 237, 0.95) !important;
+}
+
+:deep(.vuetify-table tr > th:first-child),
+:deep(.vuetify-table tr > td:first-child) {
+  display: none !important;
+}
+
+.product-group-row td {
+  padding: 0.4rem 0.9rem !important;
+  background: white;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.95) !important;
+}
+
+.product-group-toggle {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-height: 2.6rem;
+  gap: 0.65rem;
+  padding: 0.25rem 0;
+  border: 0;
+  background: transparent;
+  color: #334155;
+  text-align: left;
+  cursor: pointer;
+}
+
+.product-group-toggle:hover .product-group-label {
+  color: #b45309;
+}
+
+.product-group-toggle:focus-visible {
+  outline: 2px solid #f59e0b;
+  outline-offset: 2px;
+  border-radius: 0.35rem;
+}
+
+.product-group-chevron {
+  flex: 0 0 1.1rem;
+  color: #94a3b8;
+}
+
+.product-group-label {
+  overflow: hidden;
+  color: #1e293b;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  transition: color 0.15s ease;
+}
+
+.product-group-count {
+  flex: 0 0 auto;
+  padding: 0.18rem 0.45rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 999px;
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 0.65rem;
+  font-weight: 600;
+}
+
+.table-name-cell--child {
+  padding-left: 0.85rem;
+}
+
+.product-branch {
+  flex: 0 0 auto;
+  color: #cbd5e1;
 }
 
 .table-name-cell {
