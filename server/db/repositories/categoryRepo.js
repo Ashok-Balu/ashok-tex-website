@@ -8,7 +8,52 @@ const normalizeId = (id) => {
 async function slugExists(slug, excludeId) { return !!(await (await categories()).findOne({ slug, ...(excludeId ? { id: { $ne: normalizeId(excludeId) } } : {}) })); }
 async function withProductCount(row) { if (!row) return row; const count = await (await collection('products')).countDocuments({ category_id: normalizeId(row.id), published: true }); return { ...row, productCount: count }; }
 export async function getAllCategories({ includeInactive = false } = {}) { const rows = await (await categories()).find(includeInactive ? {} : { active: true }).sort({ display_order: 1, name: 1 }).toArray(); const products = await (await collection('products')).find({ published: true }, { projection: { category_id: 1 } }).toArray(); const counts = products.reduce((map, p) => map.set(normalizeId(p.category_id), (map.get(normalizeId(p.category_id)) || 0) + 1), new Map()); return rows.map((row) => ({ ...row, productCount: counts.get(normalizeId(row.id)) || 0 })); }
-export async function getCategoryTree(options = {}) { const flat = await getAllCategories(options); const byId = new Map(flat.map((c) => [normalizeId(c.id), { ...c, children: [] }])); const roots = []; for (const cat of byId.values()) { if (cat.parent_id && byId.has(normalizeId(cat.parent_id))) byId.get(normalizeId(cat.parent_id)).children.push(cat); else roots.push(cat); } return roots; }
+export function buildCategoryTree(flat) {
+  const byId = new Map(flat.map((category) => [normalizeId(category.id), { ...category, children: [] }]));
+  const visited = new Set();
+  const cycleRoots = new Set();
+
+  for (const category of byId.values()) {
+    const path = [];
+    const pathIndex = new Map();
+    let current = category;
+
+    while (current) {
+      const currentId = normalizeId(current.id);
+      if (pathIndex.has(currentId)) {
+        const cycle = path.slice(pathIndex.get(currentId));
+        const root = cycle.reduce((first, candidate) => {
+          const orderDifference = Number(first.display_order || 0) - Number(candidate.display_order || 0);
+          if (orderDifference !== 0) return orderDifference < 0 ? first : candidate;
+          return String(first.id).localeCompare(String(candidate.id)) <= 0 ? first : candidate;
+        });
+        cycleRoots.add(normalizeId(root.id));
+        break;
+      }
+      if (visited.has(currentId)) break;
+
+      pathIndex.set(currentId, path.length);
+      path.push(current);
+      const parentId = normalizeId(current.parent_id);
+      current = current.parent_id && byId.has(parentId) ? byId.get(parentId) : null;
+    }
+
+    path.forEach((node) => visited.add(normalizeId(node.id)));
+  }
+
+  const roots = [];
+  for (const category of byId.values()) {
+    const categoryId = normalizeId(category.id);
+    const parentId = normalizeId(category.parent_id);
+    if (!cycleRoots.has(categoryId) && category.parent_id && byId.has(parentId)) {
+      byId.get(parentId).children.push(category);
+    } else {
+      roots.push(category);
+    }
+  }
+  return roots;
+}
+export async function getCategoryTree(options = {}) { return buildCategoryTree(await getAllCategories(options)); }
 export async function getCategoryBySlug(slug) { return withProductCount(await (await categories()).findOne({ slug })); }
 export async function getCategoryById(id) { return withProductCount(await (await categories()).findOne({ id: normalizeId(id) })); }
 export async function getCategoryAncestry(id) { const chain = []; let current = await getCategoryById(id); const seen = new Set(); while (current && !seen.has(current.id)) { seen.add(current.id); chain.unshift(current); current = current.parent_id ? await getCategoryById(current.parent_id) : null; } return chain; }

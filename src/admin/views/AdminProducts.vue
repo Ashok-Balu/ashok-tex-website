@@ -73,6 +73,7 @@
       <v-data-table
         :headers="headers"
         :items="filteredProducts"
+        :group-by="[{ key: 'categoryName', order: 'asc' }]"
         :items-per-page="10"
         :items-per-page-options="[10, 25, 50]"
         :loading="isLoading"
