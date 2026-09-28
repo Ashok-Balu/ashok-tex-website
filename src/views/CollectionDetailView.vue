@@ -33,9 +33,10 @@
               </a>
             </div>
             <div class="mt-8 flex flex-wrap gap-3 border-t border-brand-200/70 pt-5 text-xs font-semibold uppercase tracking-[0.14em] text-ink-600">
-              <span class="rounded-full border border-brand-200 bg-white/75 px-3 py-2">{{ currentCollection.productCount || 0 }} fabrics</span>
+              <span class="rounded-full border border-brand-200 bg-white/75 px-3 py-2">{{ currentCollection.productCount || 0 }} {{ (currentCollection.productCount || 0) === 1 ? 'Product' : 'Products' }}</span>
               <span class="rounded-full border border-brand-200 bg-white/75 px-3 py-2">Made in Karur</span>
-              <span class="rounded-full border border-[#c8d8c7] bg-[#e8f0e5] px-3 py-2 text-[#41634b]">Wholesale ready</span>
+              <span class="rounded-full border border-brand-200 bg-white/75 px-3 py-2">Manufacturer</span>
+              <span class="rounded-full border border-[#c8d8c7] bg-[#e8f0e5] px-3 py-2 text-[#41634b]">Direct supply</span>
             </div>
           </div>
         </div>

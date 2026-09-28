@@ -57,7 +57,19 @@
 
       <div v-if="loading" class="rounded-[1.75rem] border border-[#f1e7d4] bg-white py-24 text-center text-ink-400 shadow-sm">Loading fabrics&hellip;</div>
       <div v-else-if="products.length > 0">
-        <ProductGrid :products="products" />
+        <section v-for="group in productGroups" :key="group.key" class="mb-12 last:mb-0">
+          <div class="mb-5 flex flex-wrap items-end justify-between gap-3 border-b border-[#e9ddcc] pb-3">
+            <div>
+              <p class="text-[10px] font-semibold uppercase tracking-[0.2em] text-ink-500">Collection</p>
+              <h2 class="mt-1 font-display text-2xl font-bold text-ink-900">{{ group.name }}</h2>
+            </div>
+            <div class="flex items-center gap-4 text-sm text-ink-500">
+              <span>{{ group.products.length }} {{ group.products.length === 1 ? 'product' : 'products' }}</span>
+              <router-link v-if="group.slug" :to="`/collections/${group.slug}`" class="font-semibold text-brand-600 hover:text-brand-700">View collection →</router-link>
+            </div>
+          </div>
+          <ProductGrid :products="group.products" />
+        </section>
         <div v-if="pagination.totalPages > 1" class="mt-10 flex items-center justify-center gap-2">
           <button
             v-for="p in pagination.totalPages" :key="p"
@@ -99,6 +111,23 @@ const queryParams = computed(() => ({
 }));
 
 const { products, pagination, loading } = useProductList(queryParams);
+
+const productGroups = computed(() => {
+  const groups = new Map();
+  for (const product of products.value) {
+    const key = product.categorySlug || product.category || 'uncategorized';
+    if (!groups.has(key)) {
+      groups.set(key, {
+        key,
+        name: product.category || 'Uncategorized',
+        slug: product.categorySlug,
+        products: [],
+      });
+    }
+    groups.get(key).products.push(product);
+  }
+  return [...groups.values()];
+});
 
 watch([searchQuery, selectedCategory, sortBy], () => { page.value = 1; });
 

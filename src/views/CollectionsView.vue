@@ -16,7 +16,8 @@
           <div class="mt-8 flex flex-wrap gap-3 text-xs font-semibold uppercase tracking-[0.14em] text-ink-600">
             <span class="rounded-full border border-brand-200 bg-white/75 px-3 py-2">{{ categories.length }} collections</span>
             <span class="rounded-full border border-brand-200 bg-white/75 px-3 py-2">Karur, Tamil Nadu</span>
-            <span class="rounded-full border border-[#c8d8c7] bg-[#e8f0e5] px-3 py-2 text-[#41634b]">Direct mill supply</span>
+            <span class="rounded-full border border-brand-200 bg-white/75 px-3 py-2">Manufacturer</span>
+            <span class="rounded-full border border-[#c8d8c7] bg-[#e8f0e5] px-3 py-2 text-[#41634b]">Direct supply</span>
           </div>
         </div>
       </div>
@@ -42,7 +43,7 @@
               class="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.12em]"
               :style="{ backgroundColor: `${col.accentColor || '#1a6b3a'}22`, color: col.accentColor || '#1a6b3a' }"
             >
-              {{ col.productCount }} Fabrics
+              {{ col.productCount }} {{ col.productCount === 1 ? 'Product' : 'Products' }}
             </span>
             <h2 class="font-display text-3xl sm:text-4xl font-bold text-ink-900">{{ col.name }}</h2>
             <p class="text-base text-ink-600 leading-relaxed">{{ col.description }}</p>
