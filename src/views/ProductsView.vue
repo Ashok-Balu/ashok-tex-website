@@ -1,17 +1,29 @@
 <template>
   <div class="page-shell pt-20 pb-16">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <div class="product-spotlight relative overflow-hidden rounded-[2rem] p-6 sm:p-8 lg:p-10 mb-8">
-        <div class="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full border border-brand-200/60 bg-brand-100/30 blur-sm"></div>
+      <div class="product-spotlight relative mb-8 overflow-hidden rounded-[2rem] p-6 sm:p-8 lg:p-10">
+        <div class="pointer-events-none absolute -left-10 top-10 h-44 w-44 rounded-full border border-brand-200/60 bg-white/20 blur-2xl"></div>
+        <div class="pointer-events-none absolute -right-16 -top-20 h-56 w-56 rounded-full border border-brand-200/60 bg-brand-100/40 blur-sm"></div>
         <div class="pointer-events-none absolute bottom-0 right-24 h-px w-40 bg-gradient-to-r from-transparent via-brand-400/60 to-transparent"></div>
+        <div class="pointer-events-none absolute bottom-5 left-12 h-24 w-24 rounded-full border border-[#e7d1aa] bg-[#fff9f1]/60 shadow-[0_0_40px_rgba(199,136,57,0.12)]"></div>
         <Breadcrumb :items="[{ name: 'Products' }]" />
         <div class="relative mt-8 grid gap-6 lg:grid-cols-[1.3fr_0.7fr] lg:items-end">
           <div class="max-w-3xl">
             <span class="luxury-chip">Machine-Made Fabric Catalogue</span>
             <h1 class="mt-4 font-display text-4xl font-bold leading-[1.05] tracking-tight text-ink-900 sm:text-5xl lg:text-6xl">All Products</h1>
-            <p class="mt-4 max-w-2xl text-base text-ink-600 leading-relaxed">Browse our complete range of cotton, woven, and recycled fabrics. Manufactured in Karur with custom order flexibility and bulk-ready consistency.</p>
+            <p class="mt-4 max-w-2xl text-base leading-relaxed text-ink-600">Browse our complete range of cotton, woven, and recycled fabrics. Manufactured in Karur with custom order flexibility and bulk-ready consistency.</p>
+            <div class="mt-5 flex flex-wrap gap-2.5">
+              <span class="rounded-full border border-[#eadcc0] bg-white/80 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-700">Cotton</span>
+              <span class="rounded-full border border-[#eadcc0] bg-white/80 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-700">Woven</span>
+              <span class="rounded-full border border-[#eadcc0] bg-white/80 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-700">Recycled</span>
+              <span class="rounded-full border border-[#eadcc0] bg-white/80 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-700">Bulk Orders</span>
+            </div>
           </div>
           <div class="rounded-[1.5rem] border border-[#efd9b0] bg-white/80 p-4 shadow-[0_18px_35px_-25px_rgba(107,63,26,0.55)] backdrop-blur-sm">
+            <div class="mb-3 flex items-center justify-between text-[10px] font-semibold uppercase tracking-[0.18em] text-ink-500">
+              <span>Factory Snapshot</span>
+              <span class="rounded-full bg-brand-50 px-2 py-1 text-brand-700">Karur</span>
+            </div>
             <div class="grid grid-cols-3 gap-3 text-center">
               <div class="detail-stat rounded-xl border-[#f3e5d0]">
                 <p class="text-xl font-bold text-ink-900">8+</p>
@@ -23,7 +35,7 @@
               </div>
               <div class="detail-stat rounded-xl border-[#f3e5d0]">
                 <p class="text-xl font-bold text-ink-900">100%</p>
-                <p class="mt-1 text-[10px] uppercase tracking-[0.18em] text-ink-500">Quality Focus</p>
+                <p class="mt-1 text-[10px] uppercase tracking-[0.18em] text-ink-500">Quality</p>
               </div>
             </div>
           </div>
