@@ -44,7 +44,7 @@
 
       <div v-if="status === 'error'" class="p-4 bg-red-50 border border-red-200 rounded-2xl mb-5 text-sm text-red-700">{{ errorMessage || 'Failed. Please call +91 7904154775.' }}</div>
 
-      <v-form v-if="status !== 'success'" @submit.prevent="handleSubmit" novalidate class="space-y-4">
+      <form v-if="status !== 'success'" @submit.prevent="handleSubmit" novalidate class="space-y-4">
         <div>
           <label for="contact-name" class="block text-sm font-medium text-ink-700 mb-1.5">Name <span class="text-red-500">*</span></label>
           <input id="contact-name" v-model="form.name" type="text" required placeholder="Your full name" :class="['input-field', errors.name ? 'border-red-400 focus:ring-red-400' : '']" @blur="validateField('name')" />
@@ -71,7 +71,7 @@
           <svg v-if="status === 'submitting'" class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
           {{ status === 'submitting' ? 'Sending...' : 'Send Message' }}
         </button>
-      </v-form>
+      </form>
     </div>
   </div>
 </template>

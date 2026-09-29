@@ -10,22 +10,6 @@
       :subtitle="sectionMap[key]?.subtitle"
     />
 
-    <!-- Contact Strip -->
-    <section class="py-12 bg-ink-900">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          <div v-for="info in contactInfo" :key="info.label" class="flex items-start gap-4">
-            <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center flex-shrink-0">
-              <svg class="w-5 h-5 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="info.icon"/></svg>
-            </div>
-            <div class="min-w-0">
-              <p class="text-xs text-brand-400 font-semibold uppercase tracking-wider mb-1">{{ info.label }}</p>
-              <p class="text-sm text-white/80 leading-relaxed break-words" v-html="info.content"></p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
   </div>
 </template>
 
@@ -68,6 +52,4 @@ const orderedKeys = computed(() => sections.value
   .sort((a, b) => a.display_order - b.display_order)
   .map((s) => s.section_key));
 
-const contactInfo = computed(() => [
-]);
 </script>
