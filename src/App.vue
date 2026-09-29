@@ -55,11 +55,11 @@ function updateHeadMeta() {
   const routeTitle = route.meta?.title || 'Ashok Tex | Textile Fabric Manufacturer';
   const routeDescription = route.meta?.description || 'Ashok Tex textile fabric manufacturer and wholesale supplier in Karur, Tamil Nadu.';
 
-  const title = currentCompany.name && route.meta?.isAdmin !== true
-    ? `${currentCompany.name} | ${routeTitle.replace(/^.*\|\s*/, '')}`.replace(/\s{2,}/g, ' ')
-    : routeTitle;
+  const title = route.meta?.isAdmin === true
+    ? routeTitle
+    : (currentCompany.metaTitle || (currentCompany.name ? `${currentCompany.name} | ${routeTitle.replace(/^.*\|\s*/, '')}`.replace(/\s{2,}/g, ' ') : routeTitle));
 
-  const description = currentCompany.tagline || routeDescription;
+  const description = currentCompany.metaDescription || currentCompany.tagline || routeDescription;
 
   document.title = title;
   const metaDesc = document.querySelector('meta[name="description"]');
@@ -74,6 +74,16 @@ function updateHeadMeta() {
     }
     element.setAttribute('content', content);
   };
+
+  if (currentCompany.keywords) {
+    let keywordMeta = document.querySelector('meta[name="keywords"]');
+    if (!keywordMeta) {
+      keywordMeta = document.createElement('meta');
+      keywordMeta.setAttribute('name', 'keywords');
+      document.head.appendChild(keywordMeta);
+    }
+    keywordMeta.setAttribute('content', currentCompany.keywords);
+  }
 
   setMeta('property', 'og:title', title);
   setMeta('property', 'og:description', description);
