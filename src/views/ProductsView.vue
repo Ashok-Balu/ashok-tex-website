@@ -30,8 +30,8 @@
                 <p class="mt-1 text-[10px] uppercase tracking-[0.18em] text-ink-500">Collections</p>
               </div>
               <div class="detail-stat rounded-xl border-[#f3e5d0]">
-                <p class="text-xl font-bold text-ink-900">24</p>
-                <p class="mt-1 text-[10px] uppercase tracking-[0.18em] text-ink-500">Per Page</p>
+                <p class="text-xl font-bold text-ink-900">{{ pagination.total.toLocaleString() }}</p>
+                <p class="mt-1 text-[10px] uppercase tracking-[0.18em] text-ink-500">Products</p>
               </div>
               <div class="detail-stat rounded-xl border-[#f3e5d0]">
                 <p class="text-xl font-bold text-ink-900">100%</p>

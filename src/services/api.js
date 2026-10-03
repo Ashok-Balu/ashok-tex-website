@@ -2,6 +2,7 @@ const API_BASE = '/api';
 import { ref } from 'vue';
 import { useAdminNotifications } from '../composables/useAdminNotifications';
 import { validateImageFiles } from '../utils/imageUpload';
+import { MAX_VIDEO_SIZE_BYTES, MAX_VIDEO_SIZE_LABEL } from '../../shared/videoUploadLimits.js';
 
 const requestCache = new Map();
 const activeRequests = new Map();
@@ -228,6 +229,17 @@ export const adminApi = {
     const formData = new FormData();
     files.forEach((file) => formData.append('images', file));
     return request('/admin/upload', { method: 'POST', body: formData, auth: true, isFormData: true });
+  },
+  uploadVideo: (file) => {
+    if (!file || !['video/mp4', 'video/webm', 'video/ogg'].includes(file.type)) {
+      throw new Error('Choose an MP4, WEBM, or OGG video file.');
+    }
+    if (file.size > MAX_VIDEO_SIZE_BYTES) {
+      throw new Error(`${file.name} is larger than the ${MAX_VIDEO_SIZE_LABEL} video limit.`);
+    }
+    const formData = new FormData();
+    formData.append('video', file);
+    return request('/admin/upload/video', { method: 'POST', body: formData, auth: true, isFormData: true });
   },
 };
 

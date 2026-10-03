@@ -72,18 +72,43 @@
       </div>
 
 
-      <div v-if="aboutGallery.length > 1" class="py-16 border-b border-surface-100">
+      <div v-if="aboutGallery.length > 0" class="py-16 border-b border-surface-100">
         <div class="text-center max-w-2xl mx-auto mb-10">
           <p class="section-label">Factory Moments</p>
           <h2 class="section-title">More From the Mill</h2>
         </div>
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          <div v-for="(photo, i) in aboutGallery.slice(1)" :key="`${photo.url}-${i}`" class="rounded-3xl overflow-hidden border border-surface-200 bg-surface-50 shadow-section">
+          <div v-for="(photo, i) in aboutGallery" :key="`${photo.url}-${i}`" class="rounded-3xl overflow-hidden border border-surface-200 bg-surface-50 shadow-section">
             <img :src="photo.url" :alt="photo.caption || 'Ashok Tex factory moment'" class="h-64 w-full object-cover" />
             <div v-if="photo.caption" class="px-4 py-3 text-sm text-ink-600">{{ photo.caption }}</div>
           </div>
         </div>
       </div>
+
+      <section class="py-16 border-b border-surface-100">
+        <div class="text-center max-w-2xl mx-auto mb-10">
+          <p class="section-label">Inside Ashok Tex</p>
+          <h2 class="section-title">See Our Work in Motion</h2>
+        </div>
+        <div class="mx-auto max-w-5xl overflow-hidden rounded-2xl bg-ink-950 shadow-section">
+          <video v-if="videoSource" :src="videoSource" controls playsinline preload="metadata" class="aspect-video w-full" aria-label="Ashok Tex video"></video>
+          <iframe v-else-if="videoEmbedUrl" :src="videoEmbedUrl" title="Ashok Tex video" class="aspect-video w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+          <div v-else class="flex aspect-video items-center justify-center bg-surface-50 text-sm text-ink-500">Company video coming soon</div>
+        </div>
+      </section>
+
+      <section v-if="virtualTourUrl" class="py-16 border-b border-surface-100">
+        <div class="grid grid-cols-1 items-center gap-8 rounded-3xl bg-ink-950 px-6 py-8 text-white sm:px-10 lg:grid-cols-[1fr_auto]">
+          <div>
+            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-brand-400">Visit Ashok Tex</p>
+            <h2 class="mt-2 font-display text-2xl font-bold sm:text-3xl">Take the 360° Google Virtual Tour</h2>
+            <p class="mt-3 max-w-2xl text-sm leading-relaxed text-white/70">Explore our location and facilities with a 360° view on Google.</p>
+          </div>
+          <a :href="virtualTourUrl" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-12 items-center justify-center rounded-lg bg-brand-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-600">
+            Large 360° View on Google
+          </a>
+        </div>
+      </section>
 
       <!-- Management -->
       <div class="py-16 border-b border-surface-100">
@@ -177,6 +202,37 @@ const aboutGallery = computed(() => {
 
 const legacyImageUrl = computed(() => company.value?.legacyImage || aboutGallery.value[0]?.url || '');
 const legacyImageAlt = computed(() => company.value?.legacyImageCaption || aboutGallery.value[0]?.caption || 'Ashok Tex textile production facility');
+const virtualTourUrl = computed(() => company.value?.googleVirtualTourUrl || 'https://maps.app.goo.gl/VJ5jRtuKKEjuC7iy8');
+const aboutVideoUrl = computed(() => company.value?.aboutVideoUrl?.trim() || '');
+const videoSource = computed(() => {
+  try {
+    const url = new URL(aboutVideoUrl.value);
+    return /^https?:$/.test(url.protocol) && /\.(mp4|webm|ogg)$/i.test(url.pathname) ? url.href : '';
+  } catch {
+    return '';
+  }
+});
+const videoEmbedUrl = computed(() => {
+  try {
+    const url = new URL(aboutVideoUrl.value);
+    if (!/^https?:$/.test(url.protocol)) return '';
+    if (['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(url.hostname)) {
+      const videoId = url.pathname === '/watch' ? url.searchParams.get('v') : url.pathname.match(/^\/(?:embed|shorts|live)\/([^/]+)/)?.[1];
+      return videoId ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}` : '';
+    }
+    if (url.hostname === 'youtu.be') {
+      const videoId = url.pathname.slice(1).split('/')[0];
+      return videoId ? `https://www.youtube-nocookie.com/embed/${encodeURIComponent(videoId)}` : '';
+    }
+    if (['vimeo.com', 'www.vimeo.com'].includes(url.hostname)) {
+      const videoId = url.pathname.match(/^\/(\d+)/)?.[1];
+      return videoId ? `https://player.vimeo.com/video/${videoId}` : '';
+    }
+    return '';
+  } catch {
+    return '';
+  }
+});
 
 const principles = [
   { title: 'Quality Consistency', desc: 'Every meter is monitored for yarn balance, loom tension, and finishing quality so buyers receive dependable performance from first sample to bulk production.' },
