@@ -91,17 +91,26 @@ export function useProductFilters(categoryRef) {
   return { facets, refetch: fetchFacets };
 }
 
-export function useFeaturedProducts(limit = 6) {
+export function useFeaturedProducts() {
   const products = ref([]);
   const loading = ref(true);
-  api.products.list({ featured: true, limit, sort: 'featured' })
+  const limit = 100;
+  const fetchAllProducts = async (params) => {
+    const firstPage = await api.products.list({ ...params, page: 1, limit });
+    const pageCount = Number(firstPage.pagination?.totalPages) || 1;
+    const otherPages = await Promise.all(Array.from({ length: pageCount - 1 }, (_, index) =>
+      api.products.list({ ...params, page: index + 2, limit }),
+    ));
+    return [firstPage, ...otherPages].flatMap((response) => Array.isArray(response.data) ? response.data : []);
+  };
+
+  fetchAllProducts({ featured: true, sort: 'featured' })
     .then(async (res) => {
-      if (res.data?.length) {
-        products.value = res.data;
+      if (res.length) {
+        products.value = res;
         return;
       }
-      const fallback = await api.products.list({ limit, sort: 'featured' });
-      products.value = Array.isArray(fallback.data) ? fallback.data : [];
+      products.value = await fetchAllProducts({ sort: 'featured' });
     })
     .catch(() => { products.value = []; })
     .finally(() => { loading.value = false; });
