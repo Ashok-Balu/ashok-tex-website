@@ -52,6 +52,31 @@ router.post('/', upload.array('images', 20), async (req, res) => {
   }
 });
 
+router.post('/video/signature', express.json({ limit: '16kb' }), async (req, res) => {
+  try {
+    configureCloudinary();
+    const filename = createVideoStorageFilename(String(req.body.filename || 'video.mp4'));
+    const timestamp = Math.round(Date.now() / 1000);
+    const params = {
+      folder: process.env.CLOUDINARY_FOLDER || 'ashok-tex',
+      public_id: filename.replace(/\.[^.]+$/, ''),
+      timestamp,
+    };
+    const signature = cloudinary.utils.api_sign_request(params, process.env.CLOUDINARY_API_SECRET);
+    res.json({
+      success: true,
+      data: {
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+        apiKey: process.env.CLOUDINARY_API_KEY,
+        signature,
+        ...params,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || 'Unable to prepare video upload.' });
+  }
+});
+
 router.post('/video', uploadVideo.single('video'), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ success: false, message: 'No video file was uploaded.' });
@@ -65,6 +90,7 @@ router.post('/video', uploadVideo.single('video'), async (req, res) => {
         public_id: filename.replace(/\.[^.]+$/, ''),
         resource_type: 'video',
         invalidate: true,
+        timeout: 600000,
       }, (error, response) => error ? reject(error) : resolve(response)).end(req.file.buffer);
     });
     res.status(201).json({
