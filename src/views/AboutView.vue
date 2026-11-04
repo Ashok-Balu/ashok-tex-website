@@ -90,23 +90,12 @@
           <p class="section-label">Inside Ashok Tex</p>
           <h2 class="section-title">See Our Work in Motion</h2>
         </div>
-        <div class="mx-auto max-w-5xl overflow-hidden rounded-2xl bg-ink-950 shadow-section">
-          <video v-if="videoSource" :src="videoSource" controls playsinline preload="metadata" class="aspect-video w-full" aria-label="Ashok Tex video"></video>
-          <iframe v-else-if="videoEmbedUrl" :src="videoEmbedUrl" title="Ashok Tex video" class="aspect-video w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
-          <div v-else class="flex aspect-video items-center justify-center bg-surface-50 text-sm text-ink-500">Company video coming soon</div>
-        </div>
-      </section>
-
-      <section v-if="virtualTourUrl" class="py-16 border-b border-surface-100">
-        <div class="grid grid-cols-1 items-center gap-8 rounded-3xl bg-ink-950 px-6 py-8 text-white sm:px-10 lg:grid-cols-[1fr_auto]">
-          <div>
-            <p class="text-xs font-semibold uppercase tracking-[0.18em] text-brand-400">Visit Ashok Tex</p>
-            <h2 class="mt-2 font-display text-2xl font-bold sm:text-3xl">Take the 360° Google Virtual Tour</h2>
-            <p class="mt-3 max-w-2xl text-sm leading-relaxed text-white/70">Explore our location and facilities with a 360° view on Google.</p>
+        <div class="mx-auto grid w-full max-w-[90rem] grid-cols-1 items-stretch gap-8 lg:grid-cols-2">
+          <div v-for="(video, index) in companyVideos" :key="index" class="flex aspect-video overflow-hidden rounded-2xl bg-ink-950 shadow-section">
+            <video v-if="getVideoSource(video.url)" :src="getVideoSource(video.url)" controls playsinline preload="metadata" class="h-full w-full object-cover" :aria-label="`Ashok Tex video ${index + 1}`"></video>
+            <iframe v-else-if="getVideoEmbedUrl(video.url)" :src="getVideoEmbedUrl(video.url)" :title="`Ashok Tex video ${index + 1}`" class="h-full w-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+            <div v-else class="flex h-full w-full items-center justify-center bg-surface-50 text-sm text-ink-500">Company video {{ index + 1 }} coming soon</div>
           </div>
-          <a :href="virtualTourUrl" target="_blank" rel="noopener noreferrer" class="inline-flex min-h-12 items-center justify-center rounded-lg bg-brand-500 px-5 py-3 text-sm font-semibold text-white transition hover:bg-brand-600">
-            Large 360° View on Google
-          </a>
         </div>
       </section>
 
@@ -202,19 +191,21 @@ const aboutGallery = computed(() => {
 
 const legacyImageUrl = computed(() => company.value?.legacyImage || aboutGallery.value[0]?.url || '');
 const legacyImageAlt = computed(() => company.value?.legacyImageCaption || aboutGallery.value[0]?.caption || 'Ashok Tex textile production facility');
-const virtualTourUrl = computed(() => company.value?.googleVirtualTourUrl || 'https://maps.app.goo.gl/VJ5jRtuKKEjuC7iy8');
-const aboutVideoUrl = computed(() => company.value?.aboutVideoUrl?.trim() || '');
-const videoSource = computed(() => {
+const companyVideos = computed(() => [
+  { url: company.value?.aboutVideoUrl?.trim() || '' },
+  { url: company.value?.aboutVideoUrl2?.trim() || '' },
+]);
+function getVideoSource(value = '') {
   try {
-    const url = new URL(aboutVideoUrl.value);
+    const url = new URL(value);
     return /^https?:$/.test(url.protocol) && /\.(mp4|webm|ogg)$/i.test(url.pathname) ? url.href : '';
   } catch {
     return '';
   }
-});
-const videoEmbedUrl = computed(() => {
+}
+function getVideoEmbedUrl(value = '') {
   try {
-    const url = new URL(aboutVideoUrl.value);
+    const url = new URL(value);
     if (!/^https?:$/.test(url.protocol)) return '';
     if (['youtube.com', 'www.youtube.com', 'm.youtube.com'].includes(url.hostname)) {
       const videoId = url.pathname === '/watch' ? url.searchParams.get('v') : url.pathname.match(/^\/(?:embed|shorts|live)\/([^/]+)/)?.[1];
@@ -232,7 +223,7 @@ const videoEmbedUrl = computed(() => {
   } catch {
     return '';
   }
-});
+}
 
 const principles = [
   { title: 'Quality Consistency', desc: 'Every meter is monitored for yarn balance, loom tension, and finishing quality so buyers receive dependable performance from first sample to bulk production.' },

@@ -70,7 +70,7 @@ function normalizeProduct(product) {
   return { ...product, images };
 }
 
-async function request(path, { method = 'GET', body, auth = false, isFormData = false, cache = false } = {}) {
+async function request(path, { method = 'GET', body, auth = false, isFormData = false, cache = false, notifySuccess = true } = {}) {
   beginApiRequest();
   const headers = {};
   if (!isFormData) headers['Content-Type'] = 'application/json';
@@ -122,7 +122,7 @@ async function request(path, { method = 'GET', body, auth = false, isFormData = 
         error.payload = json;
         throw error;
       }
-      if (auth && method !== 'GET') notify('Changes saved successfully.');
+      if (auth && method !== 'GET' && notifySuccess) notify('Changes saved successfully.');
       if (cache && method === 'GET') requestCache.set(cacheKey, { createdAt: Date.now(), data: json });
       if (method !== 'GET') {
         invalidateRelatedApiCache(path);
@@ -230,16 +230,45 @@ export const adminApi = {
     files.forEach((file) => formData.append('images', file));
     return request('/admin/upload', { method: 'POST', body: formData, auth: true, isFormData: true });
   },
-  uploadVideo: (file) => {
+  uploadVideo: async (file) => {
     if (!file || !['video/mp4', 'video/webm', 'video/ogg'].includes(file.type)) {
       throw new Error('Choose an MP4, WEBM, or OGG video file.');
     }
     if (file.size > MAX_VIDEO_SIZE_BYTES) {
       throw new Error(`${file.name} is larger than the ${MAX_VIDEO_SIZE_LABEL} video limit.`);
     }
-    const formData = new FormData();
-    formData.append('video', file);
-    return request('/admin/upload/video', { method: 'POST', body: formData, auth: true, isFormData: true });
+
+    try {
+      const signed = await request('/admin/upload/video/signature', { method: 'POST', body: { filename: file.name }, auth: true, notifySuccess: false });
+      const upload = new FormData();
+      upload.append('file', file);
+      upload.append('api_key', signed.data.apiKey);
+      upload.append('timestamp', String(signed.data.timestamp));
+      upload.append('signature', signed.data.signature);
+      upload.append('folder', signed.data.folder);
+      upload.append('public_id', signed.data.public_id);
+
+      return await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `https://api.cloudinary.com/v1_1/${signed.data.cloudName}/video/upload`);
+        xhr.onload = () => {
+          try {
+            const result = JSON.parse(xhr.responseText);
+            if (xhr.status >= 200 && xhr.status < 300) resolve({ success: true, data: { url: result.secure_url, publicId: result.public_id } });
+            else reject(new Error(result.error?.message || 'Video upload failed.'));
+          } catch {
+            reject(new Error('Cloudinary returned an invalid upload response.'));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Network error while uploading the video.'));
+        xhr.send(upload);
+      });
+    } catch (error) {
+      if (error?.status && error.status !== 502) throw error;
+      const formData = new FormData();
+      formData.append('video', file);
+      return request('/admin/upload/video', { method: 'POST', body: formData, auth: true, isFormData: true });
+    }
   },
 };
 
