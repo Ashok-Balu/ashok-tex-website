@@ -44,8 +44,7 @@ router.post('/', contactLimiter, async (req, res) => {
 
     let emailDelivered = false;
     try {
-      await sendContactNotification(saved);
-      emailDelivered = true;
+      emailDelivered = await sendContactNotification(saved);
     } catch (err) {
       console.error('[Contact Email Notification Error]', err.message);
     }

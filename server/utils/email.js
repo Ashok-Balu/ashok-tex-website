@@ -93,7 +93,7 @@ Status: NEW
 
   if (!transporter) {
     console.warn('[Email Not Sent] SMTP_USER/SMTP_PASS are not configured in .env — enquiry was saved but no email was dispatched.');
-    throw new Error('Email notifications are not configured.');
+    return false;
   }
 
   try {
@@ -106,9 +106,10 @@ Status: NEW
       html: htmlBody,
     });
     console.log('[Email Dispatched] to ' + recipient);
+    return true;
   } catch (err) {
     console.error('[Email Dispatch Error]', err.message);
-    throw err;
+    return false;
   }
 }
 
@@ -139,7 +140,7 @@ ${message.message}
 
   if (!transporter) {
     console.warn('[Email Not Sent] SMTP_USER/SMTP_PASS are not configured in .env — message was saved but no email was dispatched.');
-    throw new Error('Email notifications are not configured.');
+    return false;
   }
 
   try {
@@ -152,8 +153,9 @@ ${message.message}
       html: htmlBody,
     });
     console.log('[Email Dispatched] to ' + recipient);
+    return true;
   } catch (err) {
     console.error('[Email Dispatch Error]', err.message);
-    throw err;
+    return false;
   }
 }

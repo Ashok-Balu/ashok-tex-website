@@ -64,12 +64,11 @@ router.post('/', enquiryLimiter, async (req, res) => {
     // Notify administrator
     let emailDelivered = false;
     try {
-      await sendEnquiryNotification({
+      emailDelivered = await sendEnquiryNotification({
         ...newEnquiry,
         createdAt: newEnquiry.created_at,
         sourcePage: newEnquiry.source_page,
       });
-      emailDelivered = true;
     } catch (err) {
       console.error('[Enquiry Email Notification Error]', err.message);
     }
