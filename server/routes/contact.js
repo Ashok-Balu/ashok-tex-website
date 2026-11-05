@@ -42,12 +42,19 @@ router.post('/', contactLimiter, async (req, res) => {
       message: cleanMessage,
     });
 
-    await sendContactNotification(saved);
+    let emailDelivered = false;
+    try {
+      await sendContactNotification(saved);
+      emailDelivered = true;
+    } catch (err) {
+      console.error('[Contact Email Notification Error]', err.message);
+    }
 
     return res.status(201).json({
       success: true,
       message: 'Thank you. Your message has been sent successfully.',
       id: saved.id,
+      emailDelivered,
     });
   } catch (err) {
     console.error('Contact error:', err);

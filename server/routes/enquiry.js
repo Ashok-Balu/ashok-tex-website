@@ -62,16 +62,23 @@ router.post('/', enquiryLimiter, async (req, res) => {
     });
 
     // Notify administrator
-    await sendEnquiryNotification({
-      ...newEnquiry,
-      createdAt: newEnquiry.created_at,
-      sourcePage: newEnquiry.source_page,
-    });
+    let emailDelivered = false;
+    try {
+      await sendEnquiryNotification({
+        ...newEnquiry,
+        createdAt: newEnquiry.created_at,
+        sourcePage: newEnquiry.source_page,
+      });
+      emailDelivered = true;
+    } catch (err) {
+      console.error('[Enquiry Email Notification Error]', err.message);
+    }
 
     return res.status(201).json({
       success: true,
       message: 'Thank you. Your enquiry has been received. Our team will contact you shortly.',
       enquiryId: newEnquiry.id,
+      emailDelivered,
     });
   } catch (err) {
     console.error('Server enquiry error:', err);
