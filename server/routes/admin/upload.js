@@ -1,6 +1,6 @@
 import express from 'express';
 import { v2 as cloudinary } from 'cloudinary';
-import { createStorageFilename, upload } from '../../middleware/upload.js';
+import { createStorageFilename, createVideoStorageFilename, upload, uploadVideo } from '../../middleware/upload.js';
 
 const router = express.Router();
 function configureCloudinary() {
@@ -48,6 +48,59 @@ router.post('/', upload.array('images', 20), async (req, res) => {
     const message = process.env.NODE_ENV === 'production'
       ? 'Image storage is currently unavailable.'
       : error.message || 'Image storage is currently unavailable.';
+    res.status(502).json({ success: false, message });
+  }
+});
+
+router.post('/video/signature', express.json({ limit: '16kb' }), async (req, res) => {
+  try {
+    configureCloudinary();
+    const filename = createVideoStorageFilename(String(req.body.filename || 'video.mp4'));
+    const timestamp = Math.round(Date.now() / 1000);
+    const params = {
+      folder: process.env.CLOUDINARY_FOLDER || 'ashok-tex',
+      public_id: filename.replace(/\.[^.]+$/, ''),
+      timestamp,
+    };
+    const signature = cloudinary.utils.api_sign_request(params, process.env.CLOUDINARY_API_SECRET);
+    res.json({
+      success: true,
+      data: {
+        cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+        apiKey: process.env.CLOUDINARY_API_KEY,
+        signature,
+        ...params,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message || 'Unable to prepare video upload.' });
+  }
+});
+
+router.post('/video', uploadVideo.single('video'), async (req, res) => {
+  if (!req.file) {
+    return res.status(400).json({ success: false, message: 'No video file was uploaded.' });
+  }
+  try {
+    configureCloudinary();
+    const filename = createVideoStorageFilename(req.file.originalname);
+    const result = await new Promise((resolve, reject) => {
+      cloudinary.uploader.upload_stream({
+        folder: process.env.CLOUDINARY_FOLDER || 'ashok-tex',
+        public_id: filename.replace(/\.[^.]+$/, ''),
+        resource_type: 'video',
+        invalidate: true,
+        timeout: 600000,
+      }, (error, response) => error ? reject(error) : resolve(response)).end(req.file.buffer);
+    });
+    res.status(201).json({
+      success: true,
+      data: { url: result.secure_url, filename: result.public_id, publicId: result.public_id },
+    });
+  } catch (error) {
+    const message = process.env.NODE_ENV === 'production'
+      ? 'Video storage is currently unavailable.'
+      : error.message || 'Video storage is currently unavailable.';
     res.status(502).json({ success: false, message });
   }
 });

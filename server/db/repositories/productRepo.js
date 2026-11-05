@@ -9,7 +9,45 @@ const normalizeId = (id) => {
 async function slugExists(slug, excludeId) { return !!(await (await products()).findOne({ slug, ...(excludeId ? { id: { $ne: normalizeId(excludeId) } } : {}) })); }
 function output(product, category) { if (!product) return null; const images = (product.images || []).slice().sort((a, b) => Number(b.isPrimary) - Number(a.isPrimary) || a.displayOrder - b.displayOrder); const specifications = (product.specifications || []).filter((a) => a.value && String(a.value).trim()); return { ...product, tags: Array.isArray(product.tags) ? product.tags : String(product.tags || '').split(',').map((tag) => tag.trim()).filter(Boolean), images, specifications, category: category ? { id: category.id, name: category.name, slug: category.slug } : null }; }
 async function attach(product) { const category = product?.category_id ? await (await collection('categories')).findOne({ id: normalizeId(product.category_id) }) : null; return output(product, category); }
-export async function listProducts({ categoryId, categorySlug, search, featured, latest, published = true, sort = 'display_order', page = 1, limit = 24, tags } = {}) { const filter = {}; if (published !== 'all') filter.published = !!published; let categoryIds; if (categorySlug) { const category = await (await collection('categories')).findOne({ slug: categorySlug }); categoryIds = category ? await getSubcategoryIds(category.id) : [-1]; } else if (categoryId) categoryIds = await getSubcategoryIds(categoryId); if (categoryIds) filter.category_id = { $in: categoryIds }; if (featured) filter.featured = true; if (latest) filter.is_latest = true; if (search?.trim()) { const regex = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'); filter.$or = [{ name: regex }, { description: regex }, { short_description: regex }, { tags: regex }, { 'specifications.name': regex }, { 'specifications.value': regex }]; } if (tags) filter.tags = { $regex: (Array.isArray(tags) ? tags : [tags]).map((tag) => tag.trim()).join('|'), $options: 'i' }; const ordering = { display_order: { display_order: 1, name: 1 }, 'name-asc': { name: 1 }, 'name-desc': { name: -1 }, newest: { created_at: -1 }, 'price-asc': { price_min: 1 }, 'price-desc': { price_max: -1 }, featured: { featured: -1, display_order: 1 } }[sort] || { display_order: 1, name: 1 }; const total = await (await products()).countDocuments(filter); const rows = await (await products()).find(filter).sort(ordering).skip((Math.max(1, Number(page)) - 1) * Number(limit)).limit(Number(limit)).toArray(); return { data: await Promise.all(rows.map(attach)), pagination: { total, page: Number(page), limit: Number(limit), totalPages: Math.ceil(total / Number(limit)) || 1 } }; }
+export async function listProducts({ categoryId, categorySlug, search, featured, latest, published = true, sort = 'display_order', page = 1, limit = 24, tags } = {}) {
+  const filter = {};
+  if (published !== 'all') filter.published = !!published;
+  let categoryIds;
+  if (categorySlug) {
+    const category = await (await collection('categories')).findOne({ slug: categorySlug });
+    categoryIds = category ? await getSubcategoryIds(category.id) : [-1];
+  } else if (categoryId) {
+    categoryIds = await getSubcategoryIds(categoryId);
+  }
+  if (categoryIds) filter.category_id = { $in: categoryIds };
+  if (featured) filter.featured = true;
+  if (latest) filter.is_latest = true;
+  if (search?.trim()) {
+    const regex = new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    filter.$or = [{ name: regex }, { description: regex }, { short_description: regex }, { tags: regex }, { 'specifications.name': regex }, { 'specifications.value': regex }];
+  }
+  if (tags) filter.tags = { $regex: (Array.isArray(tags) ? tags : [tags]).map((tag) => tag.trim()).join('|'), $options: 'i' };
+
+  const ordering = { display_order: { display_order: 1, name: 1 }, 'name-asc': { name: 1 }, 'name-desc': { name: -1 }, newest: { created_at: -1 }, 'price-asc': { price_min: 1 }, 'price-desc': { price_max: -1 }, featured: { featured: -1, display_order: 1 } }[sort] || { display_order: 1, name: 1 };
+  const pageNumber = Math.max(1, Number(page));
+  const pageSize = Number(limit);
+  const productCollection = await products();
+  const [total, rows] = await Promise.all([
+    productCollection.countDocuments(filter),
+    productCollection.find(filter).sort(ordering).skip((pageNumber - 1) * pageSize).limit(pageSize).toArray(),
+  ]);
+
+  const categoryIdsForRows = [...new Set(rows.map((product) => normalizeId(product.category_id)).filter((id) => id !== null && id !== undefined))];
+  const categoryRows = categoryIdsForRows.length
+    ? await (await collection('categories')).find({ id: { $in: categoryIdsForRows } }).toArray()
+    : [];
+  const categoriesById = new Map(categoryRows.map((category) => [normalizeId(category.id), category]));
+
+  return {
+    data: rows.map((product) => output(product, categoriesById.get(normalizeId(product.category_id)))),
+    pagination: { total, page: pageNumber, limit: pageSize, totalPages: Math.ceil(total / pageSize) || 1 },
+  };
+}
 export async function getProductBySlug(slug, { publishedOnly = true } = {}) { return attach(await (await products()).findOne({ slug, ...(publishedOnly ? { published: true } : {}) })); }
 export async function getProductById(id) { return attach(await (await products()).findOne({ id: normalizeId(id) })); }
 export async function incrementViewCount(id) { await (await products()).updateOne({ id: normalizeId(id) }, { $inc: { view_count: 1 } }); }

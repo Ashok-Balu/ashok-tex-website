@@ -295,15 +295,50 @@
         </div>
       </section>
 
+      <section class="card p-4 sm:p-6">
+        <div class="mb-5 flex items-center gap-3">
+          <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-red-100 text-sm font-bold text-red-700">07</span>
+          <div>
+            <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-red-600">About page</p>
+            <h2 class="mt-1 text-lg font-semibold text-ink-900">Company video</h2>
+          </div>
+        </div>
+        <div class="grid gap-5 lg:grid-cols-2">
+          <div>
+            <label class="block text-sm font-medium text-ink-700 mb-1.5">Video 1 URL</label>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <input v-model="form.aboutVideoUrl" type="url" class="input-field flex-1 text-base" placeholder="YouTube, Vimeo, or direct MP4/WebM URL" />
+              <input :ref="(el) => setVideoInputRef(el, 0)" type="file" accept="video/mp4,video/webm,video/ogg" class="hidden" @change="handleVideoFileChange($event, 0)" />
+              <button type="button" @click="triggerVideoInput(0)" :disabled="uploadingVideoIndex === 0" class="inline-flex items-center justify-center rounded-xl border border-surface-300 bg-white px-4 py-2 text-sm font-semibold text-ink-700 transition hover:border-brand-300 hover:text-brand-700 disabled:opacity-60">
+                {{ uploadingVideoIndex === 0 ? 'Uploading...' : 'Upload video' }}
+              </button>
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-ink-700 mb-1.5">Video 2 URL</label>
+            <div class="flex flex-col gap-2 sm:flex-row">
+              <input v-model="form.aboutVideoUrl2" type="url" class="input-field flex-1 text-base" placeholder="YouTube, Vimeo, or direct MP4/WebM URL" />
+              <input :ref="(el) => setVideoInputRef(el, 1)" type="file" accept="video/mp4,video/webm,video/ogg" class="hidden" @change="handleVideoFileChange($event, 1)" />
+              <button type="button" @click="triggerVideoInput(1)" :disabled="uploadingVideoIndex === 1" class="inline-flex items-center justify-center rounded-xl border border-surface-300 bg-white px-4 py-2 text-sm font-semibold text-ink-700 transition hover:border-brand-300 hover:text-brand-700 disabled:opacity-60">
+                {{ uploadingVideoIndex === 1 ? 'Uploading...' : 'Upload video' }}
+              </button>
+            </div>
+          </div>
+        </div>
+        <p class="mt-3 text-xs text-ink-500">MP4, WEBM, or OGG video. Maximum file size: 100 MB.</p>
+      </section>
+
       <div class="flex justify-end pt-2">
-        <button type="submit" class="inline-flex w-full items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 sm:w-auto">Save Company Settings</button>
+        <button type="submit" :disabled="isUploading" class="inline-flex w-full items-center justify-center rounded-xl bg-brand-500 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-600 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto">
+          {{ isUploading ? 'Uploading...' : 'Save Company Settings' }}
+        </button>
       </div>
     </v-form>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { adminApi } from '../../services/api';
 import { digitsOnly } from '../../utils/phone';
 import { useCompany } from '../../composables/useCompany';
@@ -312,16 +347,23 @@ import { MAX_IMAGE_SIZE_LABEL } from '../../utils/imageUpload';
 const saved = ref(false);
 const uploadError = ref('');
 const maxImageSize = MAX_IMAGE_SIZE_LABEL;
-const form = ref({ address: {}, managementMembers: [], aboutGallery: [], legacyImage: '', legacyImageCaption: '' });
+const form = ref({ address: {}, managementMembers: [], aboutGallery: [], legacyImage: '', legacyImageCaption: '',  aboutVideoUrl: '', aboutVideoUrl2: '' });
 const uploadingMemberIndex = ref(null);
 const uploadingGalleryIndex = ref(null);
 const uploadingLegacyImage = ref(false);
+const uploadingVideoIndex = ref(null);
 const uploadingBulkGallery = ref(false);
 const memberFileInputs = ref([]);
 const galleryFileInputs = ref([]);
 const legacyImageInput = ref(null);
+const videoInputs = ref([]);
 const bulkGalleryInput = ref(null);
 const { refreshCompany } = useCompany();
+const isUploading = computed(() => uploadingMemberIndex.value !== null
+  || uploadingGalleryIndex.value !== null
+  || uploadingLegacyImage.value
+  || uploadingVideoIndex.value !== null
+  || uploadingBulkGallery.value);
 
 function setMemberInputRef(el, index) {
   memberFileInputs.value[index] = el;
@@ -391,6 +433,31 @@ async function handleLegacyImageFileChange(event) {
     await uploadSingleFile(file, (url) => { form.value.legacyImage = url; });
   } finally {
     uploadingLegacyImage.value = false;
+    event.target.value = '';
+  }
+}
+
+function setVideoInputRef(el, index) {
+  videoInputs.value[index] = el;
+}
+
+function triggerVideoInput(index) {
+  videoInputs.value[index]?.click();
+}
+
+async function handleVideoFileChange(event, index) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+  uploadingVideoIndex.value = index;
+  uploadError.value = '';
+  try {
+    const res = await adminApi.uploadVideo(file);
+    if (index === 0) form.value.aboutVideoUrl = res?.data?.url || '';
+    else form.value.aboutVideoUrl2 = res?.data?.url || '';
+  } catch (error) {
+    uploadError.value = error.message || 'Video upload failed.';
+  } finally {
+    uploadingVideoIndex.value = null;
     event.target.value = '';
   }
 }
@@ -486,6 +553,7 @@ async function load() {
 }
 
 async function save() {
+  if (isUploading.value) return;
   ensureCollections();
   await adminApi.settings.updateCompany(form.value);
   await refreshCompany();

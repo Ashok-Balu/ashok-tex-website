@@ -49,6 +49,7 @@
 import { ref, onMounted } from 'vue';
 import { adminApi } from '../../services/api';
 import { useCompany } from '../../composables/useCompany';
+import { companyInfo } from '../../data/company';
 
 const saved = ref(false);
 const form = ref({});
@@ -57,13 +58,13 @@ const { refreshCompany } = useCompany();
 async function load() {
   const res = await adminApi.settings.company();
   form.value = {
-    instagramUrl: '',
-    whatsappUrl: '',
-    googleMapsUrl: '',
-    metaTitle: '',
-    metaDescription: '',
-    keywords: '',
-    ...res.data,
+    instagramUrl: companyInfo.instagramUrl || '',
+    whatsappUrl: companyInfo.whatsappUrl || '',
+    googleMapsUrl: companyInfo.googleMapsUrl || '',
+    metaTitle: companyInfo.metaTitle || '',
+    metaDescription: companyInfo.metaDescription || '',
+    keywords: companyInfo.keywords || '',
+    ...(res?.data || {}),
   };
 }
 

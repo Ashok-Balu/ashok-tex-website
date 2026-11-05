@@ -22,13 +22,9 @@
 
         <div class="relative">
           <div class="overflow-hidden rounded-[2rem] border border-[#f0dfc2] bg-white p-3 shadow-[0_30px_60px_-30px_rgba(36,23,14,0.3)]">
-            <div class="aspect-[4/3] overflow-hidden rounded-[1.5rem]">
-              <img src="https://images.unsplash.com/photo-1558769132-cb1aea458c5e?auto=format&fit=crop&w=1200&q=85" alt="Ashok Tex Fabric Weaving" class="h-full w-full object-cover" loading="lazy" />
+            <div class="aspect-[3/2] overflow-hidden rounded-[1.5rem]">
+              <img src="/images/home/heritage-capability-collage.jpeg" alt="Ashok Tex weaving facility, modern looms, and woven fabrics" class="h-full w-full object-cover" loading="lazy" />
             </div>
-          </div>
-          <div class="absolute -bottom-5 -left-5 hidden max-w-56 rounded-[1.5rem] bg-[#1d140d] p-6 text-white shadow-[0_30px_50px_-24px_rgba(26,17,9,0.7)] sm:block">
-            <span class="font-display block text-3xl font-bold text-brand-400">1995</span>
-            <span class="mt-1 block text-xs text-white/60">Continuous operation in Karur textile cluster</span>
           </div>
         </div>
       </div>

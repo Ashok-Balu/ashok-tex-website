@@ -1,18 +1,27 @@
 import nodemailer from 'nodemailer';
+import dns from 'node:dns';
 import dotenv from 'dotenv';
 dotenv.config();
 
 let transporter = null;
 
 if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+  const port = Number(process.env.SMTP_PORT) || 587;
   transporter = nodemailer.createTransport({
     host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: Number(process.env.SMTP_PORT) || 587,
-    secure: false,
+    port,
+    secure: process.env.SMTP_SECURE
+      ? process.env.SMTP_SECURE === 'true'
+      : port === 465,
     auth: {
       user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
+      pass: process.env.SMTP_PASS.replace(/\s/g, ''),
     },
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 30000,
+    family: 4,
+    lookup: (hostname, options, callback) => dns.lookup(hostname, { ...options, family: 4 }, callback),
   });
 }
 
@@ -84,12 +93,12 @@ Status: NEW
 
   if (!transporter) {
     console.warn('[Email Not Sent] SMTP_USER/SMTP_PASS are not configured in .env — enquiry was saved but no email was dispatched.');
-    return;
+    return false;
   }
 
   try {
     await transporter.sendMail({
-      from: `"Ashok Tex Enquiries" <${process.env.SMTP_USER}>`,
+      from: process.env.SMTP_FROM || `"Ashok Tex Enquiries" <${process.env.SMTP_USER}>`,
       to: recipient,
       replyTo: enquiry.email || undefined,
       subject: `[New Quote Request] ${enquiry.name} - ${enquiry.category} (${enquiry.id})`,
@@ -97,8 +106,10 @@ Status: NEW
       html: htmlBody,
     });
     console.log('[Email Dispatched] to ' + recipient);
+    return true;
   } catch (err) {
     console.error('[Email Dispatch Error]', err.message);
+    return false;
   }
 }
 
@@ -129,12 +140,12 @@ ${message.message}
 
   if (!transporter) {
     console.warn('[Email Not Sent] SMTP_USER/SMTP_PASS are not configured in .env — message was saved but no email was dispatched.');
-    return;
+    return false;
   }
 
   try {
     await transporter.sendMail({
-      from: `"Ashok Tex Website" <${process.env.SMTP_USER}>`,
+      from: process.env.SMTP_FROM || `"Ashok Tex Website" <${process.env.SMTP_USER}>`,
       to: recipient,
       replyTo: message.email || undefined,
       subject: `[New Contact Message] ${message.name} (${message.id})`,
@@ -142,7 +153,9 @@ ${message.message}
       html: htmlBody,
     });
     console.log('[Email Dispatched] to ' + recipient);
+    return true;
   } catch (err) {
     console.error('[Email Dispatch Error]', err.message);
+    return false;
   }
 }

@@ -14,7 +14,7 @@
 
       <div class="grid grid-cols-2 gap-3 md:grid-cols-3 md:gap-6">
         <router-link
-          v-for="col in categories.slice(0, 6)"
+          v-for="col in categoriesWithProducts"
           :key="col.id"
           :to="`/products?category=${col.slug}`"
           class="group relative block overflow-hidden rounded-[1.8rem] border border-[#f0dfc2] bg-white shadow-[0_20px_50px_-28px_rgba(48,31,18,0.3)] transition-all duration-400 hover:-translate-y-1 hover:shadow-[0_30px_70px_-30px_rgba(48,31,18,0.35)]"
@@ -51,11 +51,13 @@
 </template>
 
 <script setup>
+import { computed } from 'vue';
 import { useCategoryFlat } from '../composables/useCategories';
 import { optimizeImageUrl } from '../services/api';
 
 defineProps({ title: { type: String, default: '' }, subtitle: { type: String, default: '' } });
 
 const { flat: categories } = useCategoryFlat();
+const categoriesWithProducts = computed(() => categories.value.filter((category) => Number(category.productCount) > 0));
 </script>
 
