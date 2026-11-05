@@ -42,7 +42,7 @@ router.post('/', contactLimiter, async (req, res) => {
       message: cleanMessage,
     });
 
-    sendContactNotification(saved).catch(() => {});
+    await sendContactNotification(saved);
 
     return res.status(201).json({
       success: true,
