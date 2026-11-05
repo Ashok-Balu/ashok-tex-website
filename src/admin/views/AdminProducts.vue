@@ -14,47 +14,11 @@
       </select>
     </div>
 
-    <div class="table-shell">
-      <v-data-table
-        :headers="headers"
-        :items="filteredProducts"
-        :group-by="[{ key: 'categoryName', order: 'asc' }]"
-        :items-per-page="10"
-        :items-per-page-options="[10, 25, 50]"
-        :loading="isLoading"
-        item-value="id"
-        class="vuetify-table"
-        density="comfortable"
-        hover
-        multi-sort
-        loading-text="Loading products..."
-        items-per-page-text="Products per page"
-      >
-        <template #top>
-          <div class="table-heading">
-            <div>
-              <h2>Product catalogue</h2>
-                <p>{{ filteredProducts.length }} {{ filteredProducts.length === 1 ? 'product' : 'products' }} shown</p>
-            </div>
-            <span class="table-hint">Click a column heading to sort</span>
-          </div>
-          <button :class="['px-2 py-1 rounded-lg text-xs font-semibold whitespace-nowrap', p.published ? 'bg-green-100 text-green-700' : 'bg-surface-200 text-ink-500']" @click="togglePublish(p)">{{ p.published ? 'Published' : 'Draft' }}</button>
-        </div>
-        <div class="grid grid-cols-2 gap-2 text-xs">
-          <div>
-            <p class="text-ink-400 font-medium">Price</p>
-            <p class="text-ink-700">{{ p.price_min ? `₹${p.price_min}–₹${p.price_max}` : '—' }}</p>
-          </div>
-          <div>
-            <p class="text-ink-400 font-medium">Featured</p>
-            <button :class="['px-2 py-0.5 rounded-lg text-xs font-semibold mt-1 inline-block', p.featured ? 'bg-brand-100 text-brand-700' : 'bg-surface-200 text-ink-500']" @click="toggleFeatured(p)">{{ p.featured ? 'Featured' : '—' }}</button>
-          </div>
-        </div>
-        <div class="flex flex-wrap gap-2 pt-2 border-t border-slate-200">
-          <router-link :to="`/admin/products/${p.id}/edit`" class="flex-1 text-center px-3 py-2 bg-brand-50 text-brand-600 hover:bg-brand-100 text-xs font-semibold rounded-lg transition-colors">Edit</router-link>
-          <button class="flex-1 text-center px-3 py-2 bg-slate-100 text-ink-600 hover:bg-slate-200 text-xs font-semibold rounded-lg transition-colors" @click="duplicate(p)">Duplicate</button>
-          <button class="flex-1 text-center px-3 py-2 bg-red-50 text-red-600 hover:bg-red-100 text-xs font-semibold rounded-lg transition-colors" @click="remove(p)">Delete</button>
-        </div>
+    <header class="admin-page-header">
+      <div>
+        <span class="admin-page-eyebrow">Catalogue</span>
+        <h1>Products</h1>
+        <p>Manage the products shown across the Ashok Tex storefront.</p>
       </div>
       <div class="hero-actions">
         <span class="hero-count">{{ summary.total }} in catalogue</span>
@@ -879,4 +843,3 @@ onBeforeUnmount(() => {
 }
 
 </style>
-
