@@ -62,7 +62,11 @@ router.post('/', enquiryLimiter, async (req, res) => {
     });
 
     // Notify administrator
-    sendEnquiryNotification({ ...newEnquiry, createdAt: newEnquiry.created_at, sourcePage: newEnquiry.source_page }).catch(() => {});
+    await sendEnquiryNotification({
+      ...newEnquiry,
+      createdAt: newEnquiry.created_at,
+      sourcePage: newEnquiry.source_page,
+    });
 
     return res.status(201).json({
       success: true,
