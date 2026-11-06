@@ -23,3 +23,5 @@ public/uploads/*
 # Optional: keep local backup files out of Git
 *.bak
 *.backup
+
+.vercel
