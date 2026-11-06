@@ -18,6 +18,8 @@ Set these in local `.env.production` and in Vercel for Development, Preview, and
 
 `MONGODB_URI`, `MONGODB_DATABASE`, `MONGODB_POOL_MAX`, `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`, `CLOUDINARY_FOLDER`, `JWT_SECRET`, `ADMIN_USERNAME`, `ADMIN_PASSWORD`, `SITE_URL`, `VITE_API_BASE_URL`, and the existing SMTP variables when email notifications are required.
 
+For Gmail SMTP, enable 2-Step Verification on the Google account, create a Google App Password, and set `SMTP_PASS` to that 16-character App Password (spaces are optional). Do not use the normal Gmail account password. `SMTP_HOST=smtp.gmail.com`, `SMTP_PORT=587`, and `SMTP_USER=your-sending-address@gmail.com`.
+
 The MongoDB credentials supplied for local development are already in `.env.local`, which is ignored by Git. Rotate any credentials that may have been exposed in chat, logs, or a committed file.
 
 ## 4. Local and Vercel deployment

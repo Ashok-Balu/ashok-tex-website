@@ -11,7 +11,8 @@
     "start": "cross-env NODE_ENV=production node --env-file=.env.production server/server.js",
     "dev:all": "concurrently \"npm run dev\" \"npm run server\"",
     "migrate:cloudinary": "node --env-file=.env.production scripts/migrate-images-to-cloudinary.js",
-    "migrate:mongodb-prod": "node --env-file=.env.production scripts/copy-mongodb-database.js"
+    "migrate:mongodb-prod": "node --env-file=.env.production scripts/copy-mongodb-database.js",
+    "smtp:test": "node scripts/test-smtp.js"
   },
   "dependencies": {
     "@mdi/font": "^7.4.47",
